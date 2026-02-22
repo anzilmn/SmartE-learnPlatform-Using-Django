@@ -1,1 +1,1 @@
-pip install pymysql django-crispy-forms crispy-bootstrap5 pillow
+pip install django pymysql django-crispy-forms crispy-bootstrap5 pillow

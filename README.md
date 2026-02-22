@@ -11,4 +11,4 @@ activte
 
 then install the requirment in the requirment file
 
-pip install -r requirments.txt
+pip install -r requirements.txt

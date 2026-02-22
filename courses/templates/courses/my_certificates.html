@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+
+{% block title %}My Certificates - Smart Learn{% endblock %}
+
+{% block content %}
+<style>
+    body { background-color: #fcfcfd; }
+
+    /* Animated Header Vibe */
+    .achievement-header {
+        background: radial-gradient(circle at top left, #4158D0, #C850C0, #FFCC70);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 900;
+        letter-spacing: -1px;
+    }
+
+    /* Certificate Card Styling */
+    .cert-card {
+        border-radius: 24px;
+        border: 1px solid #f1f3f5;
+        background: white;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+    }
+    .cert-card:hover {
+        transform: translateY(-12px) scale(1.02);
+        box-shadow: 0 30px 60px rgba(0,0,0,0.12) !important;
+    }
+
+    /* Seal / Icon Styling */
+    .cert-seal-wrapper {
+        position: relative;
+        width: 120px;
+        height: 120px;
+        margin: 0 auto 25px;
+    }
+    .cert-seal-bg {
+        background: #f8f9fa;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px dashed #dee2e6;
+    }
+    .verified-check {
+        position: absolute;
+        bottom: 5px;
+        right: 5px;
+        background: #0d6efd;
+        color: white;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 3px solid white;
+        font-size: 0.8rem;
+    }
+
+    .btn-download {
+        background: #1a1a1a;
+        color: white;
+        border: none;
+        padding: 12px;
+        font-weight: 700;
+        transition: 0.3s all;
+    }
+    .btn-download:hover {
+        background: #000;
+        color: white;
+        transform: scale(1.02);
+    }
+    
+    .cert-id-badge {
+        background: #f1f3f5;
+        color: #495057;
+        font-family: 'Monaco', 'Consolas', monospace;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+    .tracking-widest { letter-spacing: 0.1em; }
+</style>
+
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="display-4 achievement-header mb-2">Achievement Gallery</h1>
+        <p class="text-muted fs-5 mb-4">Vro, you've unlocked <strong>{{ certificates.count }}</strong> official credentials.</p>
+        <div class="d-flex justify-content-center gap-2">
+            <span class="badge bg-dark rounded-pill px-3 py-2"><i class="bi bi-shield-check me-1"></i> Official Partner</span>
+            <span class="badge bg-primary rounded-pill px-3 py-2"><i class="bi bi-patch-check me-1"></i> ISO Verified</span>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        {% for cert in certificates %}
+        <div class="col-lg-4 col-md-6">
+            <div class="card cert-card shadow-sm h-100 p-4 border-0">
+                <div class="cert-seal-wrapper">
+                    <div class="cert-seal-bg">
+                        <i class="bi bi-award-fill text-warning" style="font-size: 4rem;"></i>
+                    </div>
+                    <div class="verified-check shadow-sm">
+                        <i class="bi bi-patch-check-fill"></i>
+                    </div>
+                </div>
+
+                <div class="text-center mb-4">
+                    <h5 class="fw-bold text-dark mb-1" style="font-size: 1.25rem;">{{ cert.course.title }}</h5>
+                    <p class="text-muted small">Issued: {{ cert.issued_at|date:"F d, Y" }}</p>
+                </div>
+                
+                <div class="bg-light rounded-4 p-3 mb-4 text-center border">
+                    <small class="text-uppercase tracking-widest text-muted d-block mb-1" style="font-size: 0.6rem; font-weight: 800;">Verification ID</small>
+                    <span class="cert-id-badge px-3 py-1 rounded-pill">{{ cert.certificate_id }}</span>
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <a href="{% url 'generate_certificate' cert.course.id %}" class="btn btn-download rounded-pill shadow-sm">
+                        <i class="bi bi-file-earmark-arrow-down me-2"></i>Download PDF
+                    </a>
+                    
+                    <button class="btn btn-link text-primary text-decoration-none fw-bold small" onclick="copyToClipboard('{{ cert.certificate_id }}')">
+                        <i class="bi bi-linkedin me-1"></i> Copy ID for LinkedIn
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="text-center py-5 bg-white rounded-5 shadow-sm border border-dashed p-5">
+                <div class="mb-4">
+                    <i class="bi bi-stars text-primary opacity-25" style="font-size: 5rem;"></i>
+                </div>
+                <h2 class="fw-bold">No Trophies Yet, Vro!</h2>
+                <p class="text-muted mb-4 mx-auto" style="max-width: 450px;">
+                    Your future employers are waiting for these certificates. Finish your current projects and get graded to claim your rewards!
+                </p>
+                <a href="{% url 'course_list' %}" class="btn btn-primary btn-lg rounded-pill px-5 fw-bold shadow">
+                    Browse Courses
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+    <div id="copyToast" class="toast align-items-center text-white bg-dark border-0 rounded-pill" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body px-4">
+                <i class="bi bi-check-circle-fill text-success me-2"></i> ID Copied! Ready to share, vro!
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Vro, this function makes sharing easy for the student
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        const toastEl = document.getElementById('copyToast');
+        const toast = new bootstrap.Toast(toastEl);
+        toast.show();
+    }).catch(err => {
+        console.error('Could not copy text: ', err);
+    });
+}
+</script>
+{% endblock %}

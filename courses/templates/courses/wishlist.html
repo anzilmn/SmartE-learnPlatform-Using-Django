@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}My Wishlist - Smart Learn{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h1 class="fw-black text-dark">My Saved Masterclasses</h1>
+            <p class="text-muted">Vro, these are the skills you're planning to conquer.</p>
+        </div>
+        <a href="{% url 'course_list' %}" class="btn btn-outline-primary rounded-pill px-4">Browse More</a>
+    </div>
+
+    <div class="row">
+        {% for course in saved_courses %}
+            <div class="col-md-4 mb-5">
+                {# Reuse the course card structure from your main page here #}
+                <div class="card course-card shadow-sm h-100">
+                    <a href="{% url 'toggle_wishlist' course.id %}" class="wishlist-btn">
+                        <i class="bi bi-heart-fill"></i>
+                    </a>
+                    <div class="card-img-wrapper">
+                        <img src="{{ course.thumbnail.url }}" class="card-img-top course-img" alt="{{ course.title }}">
+                    </div>
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold text-dark">{{ course.title }}</h5>
+                        <p class="text-muted small">{{ course.description|truncatewords:10 }}</p>
+                        <a href="{% url 'course_detail' course.id %}" class="btn btn-primary btn-sm rounded-pill w-100 mt-3">Start Learning</a>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12 text-center py-5">
+                <div class="mb-4">
+                    <i class="bi bi-heart text-muted" style="font-size: 4rem; opacity: 0.3;"></i>
+                </div>
+                <h3 class="fw-bold">Your wishlist is empty, vro.</h3>
+                <p class="text-muted">Find a masterclass and hit the heart icon to save it here!</p>
+                <a href="{% url 'course_list' %}" class="btn btn-primary rounded-pill px-5 py-3 mt-3">Explore Courses</a>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,316 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Smart Learn{% endblock %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+    body { background-color: #f4f7f6; }
+
+    /* Stats Card Styling */
+    .stat-card {
+        border-radius: 20px;
+        transition: transform 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    .stat-card:hover { transform: translateY(-5px); }
+    .stat-icon {
+        position: absolute;
+        right: 20px;
+        top: 20px;
+        font-size: 2.5rem;
+        opacity: 0.2;
+    }
+
+    /* 🔥 VRO: STREAK FIRE EFFECT 🔥 */
+    .streak-fire {
+        color: #ffc107;
+        text-shadow: 0 0 10px rgba(255, 193, 7, 0.6);
+        animation: flicker 1.5s infinite alternate;
+    }
+    @keyframes flicker {
+        0% { opacity: 0.8; transform: scale(1); }
+        100% { opacity: 1; transform: scale(1.1); }
+    }
+
+    /* Chart Card Styling */
+    .chart-card {
+        border-radius: 25px;
+        background: white;
+        border: none;
+    }
+
+    /* Horizontal Course Cards */
+    .dash-course-card {
+        border-radius: 20px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        background: white;
+    }
+    .dash-course-card:hover {
+        box-shadow: 0 15px 30px rgba(0,0,0,0.08) !important;
+    }
+    .course-thumb-container {
+        position: relative;
+        min-height: 140px;
+    }
+    
+    .completed-badge-overlay {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: #198754;
+        color: white;
+        padding: 4px 10px;
+        border-radius: 50px;
+        font-weight: 800;
+        font-size: 0.65rem;
+        z-index: 3;
+        box-shadow: 0 4px 10px rgba(25, 135, 84, 0.3);
+    }
+
+    .progress-pill {
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+        background: rgba(0,0,0,0.6);
+        backdrop-filter: blur(5px);
+        color: white;
+        padding: 4px 12px;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: bold;
+    }
+
+    .progress-custom {
+        height: 6px;
+        background-color: #eee;
+        border-radius: 10px;
+    }
+
+    /* RECOMMENDED SECTION STYLING */
+    .recommend-card {
+        border-radius: 20px;
+        border: none;
+        transition: transform 0.3s ease;
+    }
+    .recommend-card:hover {
+        transform: scale(1.02);
+    }
+</style>
+
+<div class="container py-5">
+    <div class="row align-items-center mb-5">
+        <div class="col-md-8">
+            <h1 class="fw-black text-dark mb-1">
+                Welcome back, {{ user.username }}! 
+                {% if stats.current_streak > 0 %}
+                    <span class="streak-fire"> {{ stats.current_streak }}🔥</span>
+                {% else %}
+                    👋
+                {% endif %}
+            </h1>
+            <p class="text-muted">Vro, {{ stats.streak_message }}</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{% url 'course_list' %}" class="btn btn-dark rounded-pill px-4 shadow-sm">
+                Explore More <i class="bi bi-compass ms-1"></i>
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card stat-card border-0 shadow-sm bg-primary text-white p-4 h-100">
+                <i class="bi bi-journal-bookmark stat-icon"></i>
+                <div class="card-body p-0">
+                    <h6 class="text-uppercase small fw-bold opacity-75">Courses</h6>
+                    <h2 class="fw-black mb-0">{{ stats.total_enrolled }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card border-0 shadow-sm bg-success text-white p-4 h-100">
+                <i class="bi bi-trophy stat-icon"></i>
+                <div class="card-body p-0">
+                    <h6 class="text-uppercase small fw-bold opacity-75">Certs</h6>
+                    <h2 class="fw-black mb-0">{{ stats.certificates_earned }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card border-0 shadow-sm bg-dark text-white p-4 h-100">
+                <i class="bi bi-lightning-charge stat-icon"></i>
+                <div class="card-body p-0">
+                    <h6 class="text-uppercase small fw-bold opacity-75">Finished Lessons (video)</h6>
+                    <h2 class="fw-black mb-0">{{ stats.completed_lessons_total }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card border-0 shadow-sm bg-warning text-dark p-4 h-100" style="background: linear-gradient(45deg, #ffc107, #ff9800) !important;">
+                <i class="bi bi-fire stat-icon" style="opacity: 0.4;"></i>
+                <div class="card-body p-0">
+                    <h6 class="text-uppercase small fw-bold opacity-75">Daily Streak</h6>
+                    <h2 class="fw-black mb-0">{{ stats.current_streak }} Days</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card chart-card shadow-sm p-4">
+                <h5 class="fw-bold mb-4"><i class="bi bi-bar-chart-line me-2"></i>Weekly Learning Activity</h5>
+                <div style="height: 280px;">
+                    <canvas id="activityChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold m-0">My Masterclasses</h4>
+        <span class="badge bg-white text-dark border shadow-sm rounded-pill px-3">{{ course_data|length }} total</span>
+    </div>
+
+    <div class="row">
+        {% for item in course_data %}
+        <div class="col-xl-6 mb-4">
+            <div class="card dash-course-card border-0 shadow-sm">
+                <div class="row g-0">
+                    <div class="col-sm-4 course-thumb-container">
+                        {% if item.course.id in completed_course_ids %}
+                        <div class="completed-badge-overlay">
+                            <i class="bi bi-patch-check-fill me-1"></i> COMPLETED
+                        </div>
+                        {% endif %}
+
+                        <img src="{{ item.course.thumbnail.url }}" class="w-100 h-100 object-fit-cover" alt="{{ item.course.title }}">
+                        <div class="progress-pill">
+                            <i class="bi bi-graph-up-arrow me-1"></i> {{ item.progress }}%
+                        </div>
+                    </div>
+                    <div class="col-sm-8">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="fw-bold text-dark mb-0">{{ item.course.title }}</h5>
+                            </div>
+                            <p class="text-muted small mb-3">
+                                <i class="bi bi-collection-play me-1"></i> {{ item.completed_lessons }} / {{ item.total_lessons }} modules
+                            </p>
+                            
+                            <div class="progress progress-custom mb-4">
+                                <div class="progress-bar bg-success rounded-pill" role="progressbar" style="width: {{ item.progress }}%"></div>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center">
+                                {% if item.course.id in completed_course_ids %}
+                                   <div class="d-flex align-items-center justify-content-between w-100">
+    <span class="text-success fw-bold small">
+        Course Completed <i class="bi bi-check-circle-fill ms-1"></i>
+    </span>
+
+    <a href="{% url 'course_detail' item.course.id %}" class="btn btn-sm btn-outline-success rounded-pill px-3 fw-bold" style="font-size: 0.7rem;">
+        View Content <i class="bi bi-arrow-right ms-1"></i>
+    </a>
+</div>
+                                {% else %}
+                                    <a href="{% url 'course_detail' item.course.id %}" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">
+                                        Resume <i class="bi bi-play-fill ms-1"></i>
+                                    </a>
+                                {% endif %}
+                                
+                                {% if item.progress == 100 and item.course.id not in completed_course_ids %}
+                                    <span class="text-warning small fw-bold"><i class="bi bi-exclamation-circle me-1"></i> Exam Pending</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <div class="bg-white rounded-5 p-5 shadow-sm">
+                <img src="https://cdn-icons-png.flaticon.com/512/7486/7486744.png" width="100" class="mb-4 opacity-50" alt="empty">
+                <h4 class="fw-bold">Your journey hasn't started yet!</h4>
+                <p class="text-muted mb-4">Pick a course and start building your future today, vro.</p>
+                <a href="{% url 'course_list' %}" class="btn btn-primary btn-lg rounded-pill px-5">Browse Catalog</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {# 🔥 VRO: NEW RECOMMENDED SECTION 🔥 #}
+    {% if recommended_courses %}
+    <div class="mt-5 mb-4">
+        <h4 class="fw-bold"><i class="bi bi-stars text-warning me-2"></i>Recommended for You</h4>
+        <p class="text-muted small">Vro, keep the momentum going! Check out these handpicked courses.</p>
+    </div>
+
+    <div class="row g-4">
+        {% for course in recommended_courses %}
+        <div class="col-md-4">
+            <div class="card recommend-card shadow-sm h-100 overflow-hidden">
+                <img src="{{ course.thumbnail.url }}" class="card-img-top" style="height: 180px; object-fit: cover;">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold mb-2">{{ course.title }}</h6>
+                    <p class="text-muted small mb-4" style="height: 40px; overflow: hidden;">{{ course.description|truncatewords:10 }}</p>
+                    <a href="{% url 'course_detail' course.id %}" class="btn btn-outline-dark w-100 rounded-pill fw-bold btn-sm">
+                        View Details
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const ctx = document.getElementById('activityChart').getContext('2d');
+        
+        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(13, 110, 253, 0.8)');
+        gradient.addColorStop(1, 'rgba(13, 110, 253, 0.1)');
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: {{ chart_labels|safe }},
+                datasets: [{
+                    label: 'Lessons Completed',
+                    data: {{ chart_data|safe }},
+                    backgroundColor: gradient,
+                    borderColor: '#0d6efd',
+                    borderWidth: 2,
+                    borderRadius: 8,
+                    barPercentage: 0.6,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { display: false },
+                        ticks: { stepSize: 1, color: '#999' }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#999', font: { weight: 'bold' } }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

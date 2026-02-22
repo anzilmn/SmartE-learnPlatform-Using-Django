@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+
+{% block title %}Checkout - {{ course.title }}{% endblock %}
+
+{% block content %}
+<style>
+    .checkout-container {
+        min-height: 90vh;
+        display: flex;
+        align-items: center;
+    }
+    .payment-card {
+        border: none;
+        border-radius: 25px;
+        background: #ffffff;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+    .payment-header {
+        background: #f8f9fa;
+        padding: 30px;
+        border-bottom: 1px solid #edf2f7;
+    }
+    .qr-wrapper {
+        background: white;
+        padding: 15px;
+        border-radius: 20px;
+        display: inline-block;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        border: 1px solid #f1f3f5;
+    }
+    .upi-badge {
+        background: #e7f1ff;
+        color: #0d6efd;
+        padding: 8px 16px;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 0.9rem;
+    }
+    .step-number {
+        width: 25px; height: 25px; background: #0d6efd; color: white;
+        border-radius: 50%; display: inline-flex; align-items: center;
+        justify-content: center; font-size: 0.75rem; margin-right: 8px;
+    }
+    .upload-box {
+        border: 2px dashed #dee2e6; border-radius: 15px; padding: 20px;
+        transition: all 0.3s; background: #fafafa;
+    }
+    .upload-box:hover { border-color: #0d6efd; background: #f0f7ff; }
+    .btn-verify { padding: 15px; border-radius: 15px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+    
+    .rejection-alert {
+        background-color: #fff5f5; border: 1px solid #feb2b2;
+        color: #c53030; border-radius: 15px;
+    }
+</style>
+
+<div class="container checkout-container py-5">
+    <div class="row justify-content-center w-100">
+        <div class="col-md-10 col-lg-6">
+            
+            {% if error_message %}
+            <div class="alert rejection-alert shadow-sm p-4 mb-4 d-flex align-items-center">
+                <i class="bi bi-exclamation-octagon-fill display-5 me-3"></i>
+                <div>
+                    <h6 class="fw-bold mb-1">Instructor Feedback</h6>
+                    <p class="small mb-0 opacity-75">{{ error_message }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="card payment-card">
+                <div class="payment-header text-center">
+                    <h4 class="fw-bold mb-1">Complete Your Enrollment</h4>
+                    <p class="text-muted small mb-3">Course: <span class="text-dark fw-bold">{{ course.title }}</span></p>
+                    <div class="display-6 fw-bold text-primary">₹{{ course.price }}</div>
+                </div>
+
+                <div class="card-body p-4 p-md-5">
+                    <div class="text-center mb-5">
+                        <div class="mb-3">
+                            <span class="step-number">1</span>
+                            <span class="fw-bold text-uppercase small">Scan & Pay via UPI</span>
+                        </div>
+                        <div class="qr-wrapper mb-3">
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=9446550263@paytm&pn=SmartLearn&am={{ course.price }}&cu=INR" 
+                                 alt="UPI QR Code" class="img-fluid" style="width: 200px;">
+                        </div>
+                        <div class="mt-2 text-center">
+                            <p class="mb-1 small text-muted">UPI ID / GPay Number</p>
+                            <span class="upi-badge">9446550263@paytm</span>
+                        </div>
+                    </div>
+
+                    <hr class="opacity-50 my-4">
+
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            <div class="mb-3 text-center">
+                                <span class="step-number">2</span>
+                                <span class="fw-bold text-uppercase small">Upload New Proof</span>
+                            </div>
+                            
+                            <div class="upload-box text-center">
+                                <i class="bi bi-cloud-arrow-up display-6 text-muted mb-2 d-block"></i>
+                                <label for="screenshot" class="form-label small fw-bold text-muted">
+                                    {% if error_message %} Fix & Re-upload Receipt {% else %} Select Screenshot or Receipt {% endif %}
+                                </label>
+                                <input type="file" name="screenshot" id="screenshot" class="form-control" required>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100 btn-verify shadow">
+                            {% if error_message %}
+                                Update Payment Proof <i class="bi bi-arrow-repeat ms-2"></i>
+                            {% else %}
+                                Submit Verification Request <i class="bi bi-shield-check ms-2"></i>
+                            {% endif %}
+                        </button>
+                    </form>
+
+                    <div class="mt-4 text-center">
+                        <p class="text-muted extra-small" style="font-size: 0.75rem;">
+                            <i class="bi bi-info-circle me-1"></i> 
+                            Vro, our instructor will verify your payment soon. You'll get access immediately after approval.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-center mt-4 gap-4 text-muted opacity-50">
+                <div class="small"><i class="bi bi-lock-fill me-1"></i> Secure</div>
+                <div class="small"><i class="bi bi-patch-check-fill me-1"></i> Verified</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

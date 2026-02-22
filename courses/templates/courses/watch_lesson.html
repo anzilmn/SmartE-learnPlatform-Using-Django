@@ -1,0 +1,571 @@
+{% extends 'base.html' %}
+
+{% block title %}Watching: {{ lesson.title }}{% endblock %}
+
+{% block content %}
+<style>
+    body { background-color: #f0f2f5; }
+    
+    /* --- STREAK FIRE UI --- */
+    .streak-badge-lesson {
+        background: #1a1a1a;
+        border: 1px solid #ffc107;
+        box-shadow: 0 0 15px rgba(255, 193, 7, 0.2);
+        transition: 0.3s;
+    }
+    .streak-badge-lesson:hover { transform: scale(1.05); }
+
+    /* --- GLOW HIGHLIGHT FOR JUMPING TO COMMENT --- */
+    .thread-card:target, .reply-item:target {
+        animation: highlight-glow 3s ease-out;
+        border: 2px solid #0d6efd !important;
+        background-color: #f0f7ff !important;
+    }
+    @keyframes highlight-glow {
+        0% { background-color: #fff3cd; }
+        100% { background-color: transparent; }
+    }
+
+    /* Video Player & Watermark */
+    .player-wrapper {
+        border-radius: 20px;
+        overflow: hidden;
+        background: #000;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+    }
+    .video-container { position: relative; }
+    .watermark {
+        position: absolute; top: 15px; right: 20px; 
+        color: rgba(255, 255, 255, 0.3); 
+        font-size: 0.8rem; pointer-events: none; z-index: 10;
+        background: rgba(0,0,0,0.2); padding: 4px 12px; border-radius: 50px;
+    }
+
+    /* Tabs Styling */
+    .nav-tabs-premium { border: none; gap: 10px; }
+    .nav-tabs-premium .nav-link {
+        border: none !important;
+        border-radius: 50px !important;
+        padding: 10px 25px;
+        color: #6c757d;
+        font-weight: 700;
+        transition: 0.3s;
+    }
+    .nav-tabs-premium .nav-link.active {
+        background-color: #0d6efd !important;
+        color: white !important;
+        box-shadow: 0 4px 15px rgba(13, 110, 253, 0.3);
+    }
+
+    /* Discussion Thread Premium */
+    .thread-card { border-radius: 15px; border: 1px solid #f1f3f5; transition: 0.3s; }
+    .instructor-border { border-left: 4px solid #0d6efd !important; }
+    .bg-instructor { background-color: rgba(13, 110, 253, 0.05); }
+
+    /* Sidebar Curriculum */
+    .curriculum-card { border-radius: 20px; overflow: hidden; }
+    .lesson-item {
+        padding: 15px 20px;
+        border-left: 4px solid transparent;
+        transition: 0.2s;
+        text-decoration: none;
+        display: block;
+    }
+    .lesson-item.active {
+        background-color: #f8f9ff !important;
+        border-left-color: #0d6efd;
+        color: #0d6efd !important;
+        font-weight: 700;
+    }
+    .lesson-item.locked { opacity: 0.6; cursor: not-allowed; pointer-events: none; background-color: #f8f9fa; }
+    
+    .scroll-area { max-height: 70vh; overflow-y: auto; }
+
+    /* Instructor Workspace Note Styling */
+    .notepad-area {
+        background-color: #fffdf5 !important;
+        border: 1px solid #f3e5ab !important;
+        border-left: 5px solid #f3e5ab !important;
+        border-radius: 15px !important;
+        padding: 20px;
+    }
+    
+    /* Quiz Pulse Animation */
+    .btn-quiz-pulse {
+        animation: pulse-blue 2s infinite;
+        box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.7);
+    }
+    @keyframes pulse-blue {
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.7); }
+        70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(13, 110, 253, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(13, 110, 253, 0); }
+    }
+
+
+
+    /* --- ROLE BADGES --- */
+.badge-verified {
+    background: linear-gradient(45deg, #0d6efd, #0099ff);
+    color: white !important;
+    border: none;
+    box-shadow: 0 2px 5px rgba(13, 110, 253, 0.3);
+}
+
+.badge-student { 
+    background: rgba(108, 117, 125, 0.1) !important; 
+    color: #6c757d !important; 
+    border: 1px solid rgba(108, 117, 125, 0.3) !important;
+}
+
+.badge-pro { 
+    background: rgba(25, 135, 84, 0.1) !important; 
+    color: #198754 !important; 
+    border: 1px solid rgba(25, 135, 84, 0.3) !important;
+}
+
+/* --- TEACHER REPLY GLOW --- */
+.reply-item.border-primary {
+    position: relative;
+    overflow: hidden;
+}
+
+[data-bs-theme="dark"] .reply-item.border-primary {
+    background: rgba(13, 110, 253, 0.05) !important;
+    border-left: 4px solid #0d6efd !important;
+    box-shadow: inset 0 0 15px rgba(13, 110, 253, 0.05);
+}
+
+/* Fix text colors for dark mode */
+[data-bs-theme="dark"] .small.text-secondary {
+    color: #94a3b8 !important;
+}
+</style>
+
+<div class="container-fluid py-4 px-lg-5">
+    
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            {% if request.user == lesson.course.instructor %}
+            <div class="alert alert-dark border-0 shadow-sm rounded-4 mb-0 d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-chat-left-dots-fill fs-4 me-3 text-primary"></i>
+                    <div>
+                        <h6 class="mb-0 fw-bold">Instructor Interaction Mode</h6>
+                        <small class="text-muted">Replying to comments on: <strong>{{ lesson.title }}</strong></small>
+                    </div>
+                </div>
+                <a href="{% url 'course_detail' lesson.course.id %}" class="btn btn-sm btn-outline-light rounded-pill px-3">Exit to Curriculum</a>
+            </div>
+            {% else %}
+            <div class="d-flex align-items-center">
+                <div class="streak-badge-lesson px-3 py-2 rounded-pill d-flex align-items-center">
+                    <span class="fs-4 me-2">🔥</span>
+                    <div>
+                        <h6 class="mb-0 text-white fw-bold">{{ user.profile.streak_count }} Day Streak</h6>
+                        <small class="text-warning small" style="font-size: 0.7rem;">Don't break the chain, vro!</small>
+                    </div>
+                </div>
+                <div class="ms-3">
+                    <h6 class="mb-0 fw-black">Welcome back, {{ user.username }}</h6>
+                    <small class="text-muted">Current Lesson: {{ lesson.title }}</small>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-xl-8 col-lg-7">
+            <div class="player-wrapper mb-4">
+                <div class="video-container ratio ratio-16x9">
+                    <div class="watermark"><i class="bi bi-patch-check-fill me-1"></i> 
+                        {% if request.user == lesson.course.instructor %}INSTRUCTOR MODE{% else %}{{ user.username }}{% endif %}
+                    </div>
+                    <video id="lessonVideo" controls controlsList="nodownload" oncontextmenu="return false;">
+                        <source src="{{ lesson.video_file.url }}" type="video/mp4">
+                    </video>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 p-3 mb-4">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                    <div>
+                        <h4 class="fw-black mb-1">{{ lesson.title }}</h4>
+                        <p class="text-muted small mb-0"><i class="bi bi-folder me-1"></i> {{ lesson.course.title }}</p>
+                    </div>
+                    
+                    <div class="d-flex align-items-center gap-2">
+                        {% if prev_lesson %}
+                            <a href="{% url 'watch_lesson' prev_lesson.id %}" class="btn btn-light rounded-pill px-3"><i class="bi bi-arrow-left"></i></a>
+                        {% endif %}
+
+                        {% if request.user != lesson.course.instructor %}
+                            {% if not is_completed %}
+                            <form action="{% url 'mark_lesson_complete' lesson.id %}" method="post" class="m-0">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success rounded-pill fw-bold px-4 shadow-sm">Mark Complete</button>
+                            </form>
+                            {% else %}
+                                {% if not next_lesson %}
+                                    <a href="{% url 'take_quiz' quiz.id %}" class="btn btn-primary btn-quiz-pulse rounded-pill fw-bold px-4 shadow-sm">
+                                        <i class="bi bi-trophy-fill me-2"></i>Take Course Quiz
+                                    </a>
+                                {% else %}
+                                    <div class="text-center">
+                                        <span class="badge bg-success bg-opacity-10 text-success px-4 py-2 rounded-pill fw-bold border">Finished ✅</span>
+                                        <div class="small text-muted mt-1" style="font-size: 0.6rem;">Streak Maintained! 🔥</div>
+                                    </div>
+                                {% endif %}
+                            {% endif %}
+                        {% endif %}
+
+                        {% if next_lesson %}
+                             <a href="{% url 'watch_lesson' next_lesson.id %}" class="btn btn-primary rounded-pill px-4 fw-bold">Next <i class="bi bi-arrow-right"></i></a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <ul class="nav nav-tabs nav-tabs-premium mb-3" id="lessonTabs">
+                <li class="nav-item">
+                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#discussion">Community & Comments</button>
+                </li>
+                {% if request.user != lesson.course.instructor %}
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#notes">My Notes</button>
+                </li>
+                {% endif %}
+            </ul>
+
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="discussion">
+                    <div class="card border-0 shadow-sm rounded-4 p-4">
+                        
+                        {% if user.profile.is_blocked %}
+                            <div class="alert alert-danger rounded-4 border-0 mb-4">
+                                <i class="bi bi-exclamation-octagon-fill me-2"></i>
+                                <strong>Account Restricted:</strong> You are blocked from posting new comments, vro.
+                            </div>
+                        {% else %}
+                            <form method="post" class="mb-4">
+                                {% csrf_token %}
+                                <textarea name="comment_text" class="form-control rounded-4 mb-3 border-light bg-light" rows="3" 
+                                placeholder="{% if request.user == lesson.course.instructor %}Announce something to your students...{% else %}Ask a question vro...{% endif %}"></textarea>
+                                <button type="submit" class="btn btn-dark rounded-pill px-4 fw-bold">Post Comment</button>
+                            </form>
+                        {% endif %}
+                        
+                        <div class="discussion-list">
+                            {% for comment in comments %}
+    {% if not comment.is_hidden %} 
+    <div id="comment-{{ comment.id }}" class="card thread-card mb-3 shadow-none {% if comment.user == lesson.course.instructor %}instructor-border bg-instructor{% endif %}">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <div class="d-flex align-items-center flex-wrap gap-1">
+    <img src="{{ comment.user.profile.image.url }}" class="rounded-circle me-2" width="30" height="30" style="object-fit: cover; border: 1px solid var(--border-color);">
+    <span class="fw-bold {% if data_bs_theme == 'dark' %}text-white{% else %}text-dark{% endif %}">@{{ comment.user.username }}</span>
+    
+    {% if comment.user == lesson.course.instructor %}
+        <span class="badge badge-verified ms-1" style="font-size: 0.65rem;">
+            <i class="bi bi-patch-check-fill"></i> VERIFIED TEACHER
+        </span>
+
+    {% elif comment.user.id in graduates %}
+        <span class="badge bg-success ms-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">🎓 GRADUATE</span>
+
+    {% else %}
+        {% if is_completed %}
+            <span class="badge badge-pro ms-1" style="font-size: 0.65rem;">🔥 PRO STUDENT</span>
+        {% else %}
+            <span class="badge badge-student ms-1" style="font-size: 0.65rem;">📖 LEARNING</span>
+        {% endif %}
+    {% endif %}
+</div>
+                
+                <div class="d-flex align-items-center gap-2">
+                    <small class="text-muted">{{ comment.created_at|timesince }} ago</small>
+                    
+                    <div class="dropdown">
+                        <button class="btn btn-link btn-sm text-muted p-0" data-bs-toggle="dropdown">
+                            <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3">
+                            {% if comment.user == request.user %}
+                            <li>
+                                <a class="dropdown-item small" href="#" data-bs-toggle="modal" data-bs-target="#editModal{{ comment.id }}">
+                                    <i class="bi bi-pencil me-2"></i> Edit
+                                </a>
+                            </li>
+                            {% endif %}
+                            
+                            {% if comment.user == request.user or request.user == lesson.course.instructor %}
+                            <li>
+                                <form action="{% url 'delete_comment' comment.id %}" method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="dropdown-item small text-danger" onclick="return confirm('Delete this comment permanently?')">
+                                        <i class="bi bi-trash me-2"></i> Delete
+                                    </button>
+                                </form>
+                            </li>
+                            {% endif %}
+
+                            {% if comment.user != request.user %}
+                            <li>
+                                <a href="{% url 'report_comment' comment.id %}" class="dropdown-item small text-warning">
+                                    <i class="bi bi-flag me-2"></i> Report
+                                </a>
+                            </li>
+                            {% endif %}
+
+                            {% if request.user == lesson.course.instructor and comment.user != request.user %}
+                            <li>
+                                <a href="{% url 'view_student_profile' comment.user.id %}" class="dropdown-item small">
+                                    <i class="bi bi-person-badge me-2"></i> Student Info
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <p class="text-secondary small mb-2">{{ comment.content }}</p>
+            
+            <div class="d-flex gap-3 align-items-center">
+                {% if not user.profile.is_blocked %}
+                <a class="text-primary small fw-bold text-decoration-none" data-bs-toggle="collapse" href="#replyBox{{ comment.id }}"><i class="bi bi-reply"></i> Reply</a>
+                {% endif %}
+            </div>
+
+            {% if comment.user == request.user %}
+            <div class="modal fade" id="editModal{{ comment.id }}" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content rounded-4 border-0">
+                        <form action="{% url 'edit_comment' comment.id %}" method="post">
+                            {% csrf_token %}
+                            <div class="modal-header border-0">
+                                <h6 class="fw-bold mb-0">Edit Comment</h6>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body py-0">
+                                <textarea name="content" class="form-control rounded-3 bg-light border-0" rows="4">{{ comment.content }}</textarea>
+                            </div>
+                            <div class="modal-footer border-0">
+                                <button type="submit" class="btn btn-dark btn-sm rounded-pill px-4">Update Comment</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="collapse mt-3" id="replyBox{{ comment.id }}">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="parent_id" value="{{ comment.id }}">
+                    <textarea name="comment_text" class="form-control rounded-3 mb-2 small" placeholder="Write reply..."></textarea>
+                    <button type="submit" class="btn btn-primary btn-sm rounded-pill px-3">Post Reply</button>
+                </form>
+            </div>
+
+            {% for reply in comment.replies.all %}
+                {% if not reply.is_hidden %} 
+                <div id="comment-{{ reply.id }}" class="reply-item p-3 mt-3 rounded-4 border-start border-3 ms-4 {% if reply.user == lesson.course.instructor %}border-primary bg-primary bg-opacity-10{% else %}border-secondary bg-light{% endif %}">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <div class="d-flex align-items-center flex-wrap">
+    <img src="{{ reply.user.profile.image.url }}" class="rounded-circle me-2" width="20" height="20" style="object-fit: cover; border: 1px solid var(--border-color);">
+    <strong class="small {% if data_bs_theme == 'dark' %}text-white{% else %}text-dark{% endif %}">@{{ reply.user.username }}</strong>
+    
+    {% if reply.user == lesson.course.instructor %}
+        <span class="badge badge-verified ms-2" style="font-size: 0.55rem; padding: 2px 6px;">
+            <i class="bi bi-patch-check-fill"></i> VERIFIED TEACHER
+        </span>
+    {% elif reply.user.id in graduates %}
+        <span class="badge bg-success ms-2" style="font-size: 0.55rem; padding: 2px 6px;">🎓 GRADUATE</span>
+    {% else %}
+        {% if is_completed %}
+            <span class="badge badge-pro ms-2" style="font-size: 0.55rem; padding: 2px 6px;">🔥 PRO STUDENT</span>
+        {% else %}
+            <span class="badge badge-student ms-2" style="font-size: 0.55rem; padding: 2px 6px;">📖 LEARNER</span>
+        {% endif %}
+    {% endif %}
+</div>
+                        
+                        <div class="dropdown">
+                            <button class="btn btn-link btn-sm text-muted p-0" data-bs-toggle="dropdown">
+                                <i class="bi bi-three-dots-vertical" style="font-size: 0.8rem;"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3">
+                                {% if reply.user == request.user or request.user == lesson.course.instructor %}
+                                <li>
+                                    <form action="{% url 'delete_comment' reply.id %}" method="post" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="dropdown-item small text-danger" onclick="return confirm('Delete this reply?')">
+                                            <i class="bi bi-trash me-2"></i> Delete
+                                        </button>
+                                    </form>
+                                </li>
+                                {% endif %}
+                                {% if reply.user != request.user %}
+                                <li>
+                                    <a href="{% url 'report_comment' reply.id %}" class="dropdown-item small text-warning">
+                                        <i class="bi bi-flag me-2"></i> Report
+                                    </a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+                    <p class="mb-0 small text-secondary">{{ reply.content }}</p>
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+{% empty %}
+    
+                                <p class="text-center text-muted py-4">No comments yet vro.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+           {% if request.user != lesson.course.instructor %}
+<div class="tab-pane fade" id="notes">
+    <div class="card border-0 shadow-sm rounded-4 p-4">
+        <form action="{% url 'save_lesson_note' lesson.id %}" method="post" id="notesForm">
+            {% csrf_token %}
+            <textarea id="noteTextarea" name="note_content" class="form-control notepad-area mb-4" rows="12" 
+                      placeholder="Write your lesson notes here...">{{ student_note.content }}</textarea>
+            
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 fw-bold">
+                    <i class="bi bi-save me-2"></i>Save Notes
+                </button>
+
+                <button type="button" onclick="downloadNotes()" class="btn btn-outline-dark btn-lg rounded-pill px-5 fw-bold">
+                    <i class="bi bi-download me-2"></i>Download .txt
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function downloadNotes() {
+    const noteContent = document.getElementById('noteTextarea').value;
+    const lessonTitle = "{{ lesson.title|slugify }}"; // Clean filename
+    
+    if (!noteContent.trim()) {
+        alert("Vro, write something first!");
+        return;
+    }
+
+    // Create a virtual file
+    const element = document.createElement('a');
+    const file = new Blob([noteContent], {type: 'text/plain'});
+    element.href = URL.createObjectURL(file);
+    element.download = `${lessonTitle}_notes.txt`;
+    
+    // Trigger the download
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+}
+</script>
+{% endif %}
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-lg-5">
+            <div class="card curriculum-card border-0 shadow-lg sticky-top" style="top: 100px;">
+                <div class="card-header bg-dark text-white p-4 border-0">
+                    <h5 class="mb-1 fw-black">Course Content</h5>
+                    {% if request.user != lesson.course.instructor %}
+                    <div class="progress bg-secondary bg-opacity-50" style="height: 6px;">
+                        {% with total=all_lessons.count completed=completed_lesson_ids|length %}
+                            {% widthratio completed total 100 as percentage %}
+                            <div class="progress-bar bg-success" style="width: {{ percentage }}%;"></div>
+                        {% endwith %}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="list-group list-group-flush scroll-area">
+                    {% for l in all_lessons %}
+                        {% if l.id in unlocked_lessons or request.user == lesson.course.instructor %}
+                            <a href="{% url 'watch_lesson' l.id %}" class="list-group-item list-group-item-action lesson-item border-0 {% if l.id == lesson.id %}active{% endif %}">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="small">{{ forloop.counter }}. {{ l.title }}</div>
+                                    {% if l.id in completed_lesson_ids %}
+                                        <i class="bi bi-check-circle-fill text-success"></i>
+                                    {% else %}
+                                        <i class="bi bi-play-circle"></i>
+                                    {% endif %}
+                                </div>
+                            </a>
+                        {% else %}
+                            <div class="list-group-item lesson-item border-0 locked text-muted">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="small">{{ forloop.counter }}. {{ l.title }}</div>
+                                    <i class="bi bi-lock-fill"></i>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+
+                {% if request.user != lesson.course.instructor %}
+                <div class="card-footer p-3 bg-white border-top">
+                    {% with total=all_lessons.count completed=completed_lesson_ids|length %}
+                        {% if completed == total %}
+                            <a href="{% url 'take_quiz' quiz.id %}" class="btn btn-primary w-100 rounded-pill fw-bold">
+                                <i class="bi bi-trophy me-2"></i>Final Quiz Ready
+                            </a>
+                        {% else %}
+                            <button class="btn btn-outline-secondary w-100 rounded-pill fw-bold disabled" style="font-size: 0.8rem;">
+                                Finish all lessons to unlock Quiz
+                            </button>
+                        {% endif %}
+                    {% endwith %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="celebrationModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modal-celebration p-4 shadow-lg text-center">
+            <div class="modal-body">
+                <div class="trophy-icon mb-3">🏆</div>
+                <h2 class="fw-black text-dark">Course Completed!</h2>
+                <p class="text-muted mb-4">Amazing job, vro! You've finished all the lessons. Now it's time to prove your skills in the final quiz.</p>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'take_quiz' lesson.course.id %}" class="btn btn-primary btn-lg rounded-pill fw-bold py-3">Start Final Quiz</a>
+                    <button type="button" class="btn btn-light rounded-pill fw-bold" data-bs-dismiss="modal">I'll do it later</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const video = document.getElementById('lessonVideo');
+        
+        const isLastLesson = {% if not next_lesson %}true{% else %}false{% endif %};
+        const isInstructor = {% if request.user == lesson.course.instructor %}true{% else %}false{% endif %};
+        
+        if (video && isLastLesson && !isInstructor) {
+            video.onended = function() {
+                var myModal = new bootstrap.Modal(document.getElementById('celebrationModal'));
+                myModal.show();
+            };
+        }
+    });
+</script>
+
+{% endblock %}

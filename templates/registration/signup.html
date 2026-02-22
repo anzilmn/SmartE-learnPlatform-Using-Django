@@ -1,0 +1,230 @@
+{% extends 'base.html' %}
+
+{% block title %}Join Smart Learn | New Era of Learning{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+        --glass-bg: rgba(255, 255, 255, 0.95);
+        --input-bg: #f3f4f6;
+    }
+
+    .signup-wrapper {
+        min-height: 100vh;
+        background: radial-gradient(circle at top right, #e0e7ff 0%, #f9fafb 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+    }
+
+    .main-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        border-radius: 40px;
+        box-shadow: 0 40px 100px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        max-width: 1100px;
+        width: 100%;
+        display: flex;
+        overflow: hidden;
+        animation: fadeInUp 0.8s ease-out;
+    }
+
+    /* Left Side: Brand/Visual */
+    .visual-side {
+        background: var(--primary-gradient);
+        flex: 1;
+        padding: 60px;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        position: relative;
+    }
+
+    .visual-side::after {
+        content: '';
+        position: absolute;
+        width: 200px;
+        height: 200px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 50%;
+        top: -50px;
+        right: -50px;
+    }
+
+    /* Right Side: Form */
+    .form-side {
+        flex: 1.2;
+        padding: 60px;
+        background: white;
+    }
+
+    .role-toggle {
+        display: flex;
+        background: #f3f4f6;
+        padding: 6px;
+        border-radius: 16px;
+        margin-bottom: 35px;
+    }
+
+    .role-toggle label {
+        flex: 1;
+        text-align: center;
+        padding: 12px;
+        cursor: pointer;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: 0.3s;
+        color: #6b7280;
+    }
+
+    .role-toggle input[type="radio"] { display: none; }
+
+    .role-toggle input[type="radio"]:checked + span {
+        background: white;
+        color: #4f46e5;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        display: block;
+        border-radius: 10px;
+        padding: 12px;
+    }
+
+    .floating-input-group {
+        position: relative;
+        margin-bottom: 25px;
+    }
+
+    .django-form-wrapper {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    .full-row { grid-column: span 2; }
+
+    .django-form-wrapper input {
+        width: 100%;
+        padding: 16px 20px;
+        background: #f9fafb;
+        border: 2px solid transparent;
+        border-radius: 16px;
+        font-size: 1rem;
+        transition: 0.3s;
+    }
+
+    .django-form-wrapper input:focus {
+        background: white;
+        border-color: #6366f1;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        outline: none;
+    }
+
+    .btn-submit {
+        background: var(--primary-gradient);
+        color: white;
+        padding: 18px;
+        border-radius: 16px;
+        border: none;
+        width: 100%;
+        font-weight: 700;
+        font-size: 1.1rem;
+        margin-top: 30px;
+        transition: 0.3s;
+        box-shadow: 0 10px 20px rgba(99, 102, 241, 0.2);
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 30px rgba(99, 102, 241, 0.3);
+    }
+
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 992px) {
+        .visual-side { display: none; }
+        .main-card { max-width: 550px; }
+        .django-form-wrapper { grid-template-columns: 1fr; }
+        .full-row { grid-column: span 1; }
+    }
+</style>
+
+<div class="signup-wrapper">
+    <div class="main-card">
+        <div class="visual-side">
+            <h1 class="display-4 fw-bold mb-4">Master Any Skill.</h1>
+            <p class="fs-5 opacity-75 mb-5">Join 20,000+ students learning from the best industry experts.</p>
+            
+            <div class="d-flex align-items-center mb-4">
+                <div class="bg-white bg-opacity-25 rounded-circle p-3 me-3">
+                    <i class="bi bi-patch-check-fill fs-3"></i>
+                </div>
+                <div>
+                    <h6 class="mb-0 fw-bold">Certified Courses</h6>
+                    <small class="opacity-75">Verified by industry leaders</small>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center">
+                <div class="bg-white bg-opacity-25 rounded-circle p-3 me-3">
+                    <i class="bi bi-infinite fs-3"></i>
+                </div>
+                <div>
+                    <h6 class="mb-0 fw-bold">Lifetime Access</h6>
+                    <small class="opacity-75">Learn at your own pace</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-side">
+            <div class="mb-5">
+                <h2 class="fw-bold text-dark">Get Started</h2>
+                <p class="text-muted">Create your account in less than a minute.</p>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="role-toggle">
+                    <label>
+                        <input type="radio" name="role" value="student" checked>
+                        <span><i class="bi bi-pencil-square me-2"></i>Student</span>
+                    </label>
+                    <label>
+                        <input type="radio" name="role" value="teacher">
+                        <span><i class="bi bi-briefcase me-2"></i>Teacher</span>
+                    </label>
+                </div>
+
+                <div class="django-form-wrapper">
+                    {% for field in form %}
+                        {% if field.name != 'role' %}
+                            <div class="{% if field.name == 'username' or field.name == 'email' %}full-row{% endif %}">
+                                <label class="small fw-bold text-muted ms-2 mb-2">{{ field.label }}</label>
+                                {{ field }}
+                                {% if field.errors %}
+                                    <small class="text-danger ms-2">{{ field.errors.0 }}</small>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+
+                <button type="submit" class="btn-submit">
+                    Create Account
+                </button>
+            </form>
+
+            <div class="mt-5 text-center">
+                <span class="text-muted">Already have an account?</span>
+                <a href="{% url 'login' %}" class="text-primary fw-bold text-decoration-none ms-2">Sign In</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

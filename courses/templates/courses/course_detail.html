@@ -1,0 +1,419 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ course.title }}{% endblock %}
+
+{% block content %}
+<style>
+    /* Premium LMS Styling */
+    body { background-color: #f8f9fa; }
+    
+    .course-hero-img {
+        height: 400px;
+        object-fit: cover;
+        border-radius: 24px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    }
+    
+    .glass-sidebar {
+        top: 100px;
+        border-radius: 24px;
+        background: white;
+        border: 1px solid #e2e8f0;
+    }
+
+    /* Curriculum Modernization */
+    .curriculum-card {
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        border: 1px solid #edf2f7;
+    }
+    
+    .lesson-item {
+        transition: all 0.2s;
+        border-left: 4px solid transparent;
+    }
+    .lesson-item:hover {
+        background-color: #fcfdfe;
+        border-left-color: #0d6efd;
+    }
+
+    /* Instructor Dashboard Badges */
+    .stat-badge {
+        padding: 10px 20px;
+        border-radius: 12px;
+        background: #f1f5f9;
+        font-weight: 700;
+        color: #475569;
+    }
+
+    .timer-box {
+        background: #fff5f5;
+        border: 1px solid #feb2b2;
+        border-radius: 15px;
+    }
+
+    .btn-enroll {
+        background: linear-gradient(45deg, #ff416c, #ff4b2b);
+        border: none;
+        padding: 18px;
+        font-weight: 800;
+        transition: transform 0.3s;
+    }
+    .btn-enroll:hover {
+        transform: scale(1.02);
+        box-shadow: 0 10px 20px rgba(255, 75, 43, 0.3);
+    }
+    
+    .quiz-card-status {
+        background: #fdf9ec;
+        border: 1px dashed #f6e05e;
+        border-radius: 15px;
+    }
+
+    /* Chat Button Styling */
+    .btn-chat {
+        background: #f0f7ff;
+        color: #0d6efd;
+        border: 1px solid #cfe2ff;
+        transition: 0.3s;
+    }
+    .btn-chat:hover {
+        background: #0d6efd;
+        color: white;
+    }
+</style>
+
+<div class="container py-5">
+    
+    {% if request.user == course.instructor %}
+    <div class="alert alert-primary border-0 shadow-sm rounded-4 mb-5 d-flex justify-content-between align-items-center p-3">
+        <div class="d-flex align-items-center">
+            <div class="bg-primary text-white rounded-circle p-2 me-3">
+                <i class="bi bi-person-badge-fill fs-4"></i>
+            </div>
+            <div>
+                <h6 class="mb-0 fw-bold">Instructor Control Center</h6>
+                <small class="text-primary-emphasis">Manage your students and resolve their doubts.</small>
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'course_doubts' course.id %}" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold shadow-sm">
+                <i class="bi bi-chat-right-dots-fill me-1"></i> Student Doubts
+            </a>
+            <a href="{% url 'instructor_dashboard' %}" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold">Back to Studio</a>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row g-5">
+        <div class="col-lg-8">
+            <img src="{{ course.thumbnail.url }}" class="w-100 course-hero-img mb-5 shadow" alt="{{ course.title }}">
+            
+            <div class="d-flex justify-content-between align-items-start mb-4">
+                <div>
+                    <h1 class="display-5 fw-bold text-dark mb-2">{{ course.title }}</h1>
+                    
+                    {% if request.user == course.instructor %}
+                        <div class="d-flex gap-3 mt-3">
+                            <div class="stat-badge"><i class="bi bi-people me-2"></i>{{ student_count }} Students</div>
+                            <div class="stat-badge"><i class="bi bi-currency-dollar text-success me-2"></i>₹{{ course.price|default:"0" }}</div>
+                            <div class="stat-badge"><i class="bi bi-star-fill text-warning me-2"></i>{{ course.average_rating|default:"5.0" }}</div>
+                        </div>
+                    {% else %}
+                        <div class="d-flex align-items-center">
+                            <span class="text-muted">Masterclass by <strong class="text-primary">{{ course.instructor.username }}</strong></span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="mb-5">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="fw-bold mb-0">About this masterclass</h4>
+                    {% if is_enrolled and request.user != course.instructor %}
+                    <a href="{% url 'start_chat' course.id %}" class="btn btn-chat btn-sm rounded-pill px-3 fw-bold">
+                        <i class="bi bi-question-circle-fill me-1"></i> {% if is_finished %}View Chat History{% else %}Ask a Doubt{% endif %}
+                    </a>
+                    {% endif %}
+                </div>
+                <p class="lead text-secondary" style="line-height: 1.8;">{{ course.description }}</p>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="fw-bold mb-0">Curriculum <span class="text-muted fw-normal small">({{ total_lessons }} Lessons)</span></h4>
+                
+                {% if request.user == course.instructor %}
+                    <div class="d-flex gap-2 flex-wrap">
+                        {% if not quiz %}
+                            <a href="{% url 'create_quiz' course.id %}" class="btn btn-warning btn-sm rounded-pill px-3 fw-bold">
+                                <i class="bi bi-patch-question me-1"></i> Add Final Quiz
+                            </a>
+                        {% else %}
+                            <a href="{% url 'manage_questions' course.id %}" class="btn btn-outline-warning btn-sm rounded-pill px-3 fw-bold">
+                                <i class="bi bi-gear-fill me-1"></i> Manage Quiz
+                            </a>
+                        {% endif %}
+
+                        {% if not assessment %}
+                            <a href="{% url 'create_assessment' course.id %}" class="btn btn-info btn-sm rounded-pill px-3 fw-bold text-white">
+                                <i class="bi bi-file-earmark-arrow-up me-1"></i> Add Final Assessment
+                            </a>
+                        {% else %}
+                            <a href="{% url 'create_assessment' course.id %}" class="btn btn-outline-info btn-sm rounded-pill px-3 fw-bold">
+                                <i class="bi bi-pencil-square me-1"></i> Edit Assessment
+                            </a>
+                        {% endif %}
+
+                        <a href="{% url 'add_lesson' course.id %}" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold">
+                            <i class="bi bi-plus-lg me-1"></i> Add Video
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="curriculum-card shadow-sm mb-5">
+                <div class="curriculum-scroll">
+                    {% for lesson in lessons %}
+                    <div class="lesson-item d-flex justify-content-between align-items-center p-4 border-bottom">
+                        <div class="d-flex align-items-center">
+                            <div class="me-3">
+                                {% if request.user == course.instructor %}
+                                    <i class="bi bi-play-circle-fill text-primary fs-5"></i>
+                                {% elif is_enrolled %}
+                                    {% if lesson.id in completed_lesson_ids %}
+                                        <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                                    {% elif lesson.id in unlocked_lessons %}
+                                        <i class="bi bi-play-circle text-primary fs-5"></i>
+                                    {% else %}
+                                        <i class="bi bi-lock-fill text-muted fs-5"></i>
+                                    {% endif %}
+                                {% else %}
+                                    <i class="bi bi-lock-fill text-muted fs-5"></i>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold {% if not is_instructor and is_enrolled and lesson.id not in unlocked_lessons %}text-muted{% endif %}">
+                                    {{ lesson.title }}
+                                </h6>
+                                <small class="text-muted"><i class="bi bi-clock me-1"></i> {{ lesson.duration|default:"10:00" }}</small>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            {% if request.user == course.instructor %}
+                                <a href="{% url 'watch_lesson' lesson.id %}" class="btn btn-primary btn-sm rounded-pill px-3">
+                                    <i class="bi bi-chat-dots me-1"></i> View Comments
+                                </a>
+                                <a href="{% url 'delete_lesson' lesson.id %}" class="btn btn-sm btn-outline-danger rounded-pill px-3" 
+                                   onclick="return confirm('Vro, you sure you want to delete this video?')">
+                                    <i class="bi bi-trash me-1"></i> Delete
+                                </a>
+                            {% elif is_enrolled %}
+                                {% if lesson.id in unlocked_lessons %}
+                                    <a href="{% url 'watch_lesson' lesson.id %}" class="btn btn-sm btn-outline-primary rounded-pill px-4">Watch</a>
+                                {% else %}
+                                    <span class="badge bg-light text-muted border-0"><i class="bi bi-lock-fill me-1"></i> Locked</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-light text-dark border-0">Locked</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                        <div class="p-5 text-center text-muted">No modules uploaded yet.</div>
+                    {% endfor %}
+                    
+                    {% if quiz %}
+                    <div class="lesson-item d-flex justify-content-between align-items-center p-4 border-bottom bg-light bg-opacity-25">
+                        <div class="d-flex align-items-center">
+                            <div class="me-3">
+                                {% if request.user == course.instructor or quiz_passed or is_finished %}
+                                    <i class="bi bi-patch-check-fill text-warning fs-5"></i>
+                                {% elif completed_count >= total_lessons %}
+                                    <i class="bi bi-unlock-fill text-warning fs-5"></i>
+                                {% else %}
+                                    <i class="bi bi-lock-fill text-muted fs-5"></i>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold {% if not is_enrolled %}text-muted{% endif %}">Final Certification Quiz</h6>
+                                <small class="text-muted"><i class="bi bi-stopwatch me-1"></i> {{ quiz.time_limit }} Mins</small>
+                            </div>
+                        </div>
+                        <div>
+                            {% if request.user == course.instructor %}
+                                <a href="{% url 'manage_questions' course.id %}" class="btn btn-sm btn-outline-warning rounded-pill px-3 fw-bold">Manage Quiz</a>
+                            {% elif is_enrolled %}
+                                {% if completed_count >= total_lessons or is_finished %}
+                                    <a href="{% url 'take_quiz' quiz.id %}" class="btn btn-sm btn-warning rounded-pill px-4 fw-bold">
+                                        {% if quiz_passed or is_finished %}Already Done{% else %}Start Quiz{% endif %}
+                                    </a>
+                                {% else %}
+                                    <span class="badge bg-white text-muted border px-3">Finish videos to unlock</span>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if assessment %}
+                    <div class="lesson-item d-flex justify-content-between align-items-center p-4 bg-primary bg-opacity-10">
+                        <div class="d-flex align-items-center">
+                            <div class="me-3">
+                                {% if request.user == course.instructor or quiz_passed or is_finished %}
+                                    <i class="bi bi-cloud-arrow-up-fill text-primary fs-5"></i>
+                                {% else %}
+                                    <i class="bi bi-lock-fill text-muted fs-5"></i>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold {% if not quiz_passed and request.user != course.instructor and not is_finished %}text-muted{% endif %}">{{ assessment.title }}</h6>
+                                <small class="text-info fw-bold">Final Project Submission</small>
+                            </div>
+                        </div>
+                        <div>
+                            {% if request.user == course.instructor %}
+                                <a href="{% url 'create_assessment' course.id %}" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold">Edit Assessment</a>
+                            {% elif is_enrolled %}
+                                {% if quiz_passed or is_finished %}
+                                    <a href="{% url 'submit_assessment' assessment.id %}" class="btn btn-sm btn-primary rounded-pill px-4 fw-bold shadow-sm">
+                                        {% if has_submitted_assessment or is_finished %}Already Submitted{% else %}Upload Project{% endif %}
+                                    </a>
+                                {% else %}
+                                    <span class="badge bg-white text-muted border px-3">Pass quiz to unlock</span>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card glass-sidebar shadow-lg sticky-sidebar p-2 border-0">
+                <div class="card-body p-4">
+                    
+                    {% if request.user == course.instructor %}
+                        <h5 class="fw-bold mb-4">Course Controls</h5>
+                        <div class="d-grid gap-3">
+                            <a href="{% url 'add_lesson' course.id %}" class="btn btn-primary py-3 rounded-4 fw-bold">
+                                <i class="bi bi-cloud-arrow-up-fill me-2"></i> Upload Video
+                            </a>
+
+                            <a href="{% url 'course_doubts' course.id %}" class="btn btn-warning py-3 rounded-4 fw-bold shadow-sm">
+                                <i class="bi bi-chat-left-text-fill me-2"></i> Answer Doubts
+                            </a>
+                            <a href="{% url 'edit_course' course.id %}" class="btn btn-dark py-3 rounded-4 fw-bold">
+                                <i class="bi bi-pencil-square me-2"></i> Edit Course Info
+                            </a>
+                        </div>
+
+                    {% elif not is_enrolled %}
+                        <div class="text-center mb-4">
+                            <span class="badge bg-danger bg-opacity-10 text-danger mb-2">LIMITED TIME OFFER</span>
+                            <h1 class="fw-black text-dark">₹{{ course.price }}</h1>
+                            <div class="timer-box p-3">
+                                <small class="text-danger fw-bold d-block mb-1">PRICE INCREASES IN:</small>
+                                <div id="countdown" class="h4 fw-bold font-monospace">00:00:00</div>
+                            </div>
+                        </div>
+                        <div class="d-grid">
+                            <a href="{% url 'checkout' course.id %}" class="btn btn-enroll btn-lg text-white rounded-pill shadow">
+                                ENROLL NOW <i class="bi bi-arrow-right ms-2"></i>
+                            </a>
+                        </div>
+                    {% else %}
+
+                    <div class="text-center">
+                        <i class="bi bi-rocket-takeoff-fill display-4 text-primary mb-3"></i>
+                        <h4 class="fw-bold mb-1">Your Progress</h4>
+                        <div class="progress mb-4" style="height: 10px; border-radius: 10px;">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: {{ progress_percentage }}%"></div>
+                        </div>
+                        
+                        {% if completed_count >= total_lessons or is_finished %}
+                            {% if quiz_passed or is_finished %}
+                                {% if assessment and not has_submitted_assessment and not is_finished %}
+                                    <div class="quiz-card-status p-3 mb-3 bg-info bg-opacity-10 border-info" style="border: 1px dashed #0dcaf0; border-radius: 15px;">
+                                        <p class="small fw-bold text-info mb-2"><i class="bi bi-patch-check-fill"></i> QUIZ PASSED, VRO! 🚀</p>
+                                        <a href="{% url 'submit_assessment' assessment.id %}" class="btn btn-info w-100 rounded-pill fw-bold py-3 text-white shadow-sm">
+                                            UPLOAD PROJECT 🎓
+                                        </a>
+                                        <small class="text-muted d-block mt-2">Final step for your certificate!</small>
+                                    </div>
+                                {% else %}
+                                    <div class="p-3 mb-3 bg-success bg-opacity-10 rounded-4">
+                                        <p class="text-success fw-bold mb-0">
+                                            <i class="bi bi-check-circle-fill me-1"></i> 
+                                            {% if has_submitted_assessment or is_finished %}PROJECT SUBMITTED!{% else %}COURSE COMPLETED!{% endif %}
+                                        </p>
+                                        <small class="text-muted">You're a legend! 🔥</small>
+                                    </div>
+                                {% endif %}
+                            {% elif quiz %}
+                                <div class="quiz-card-status p-3 mb-3">
+                                    <p class="small fw-bold text-warning mb-2"><i class="bi bi-stars"></i> ALL VIDEOS FINISHED! <i class="bi bi-stars"></i></p>
+                                    <a href="{% url 'take_quiz' quiz.id %}" class="btn btn-warning w-100 rounded-pill fw-bold py-3 shadow-sm">TAKE FINAL QUIZ 🎓</a>
+                                </div>
+                            {% else %}
+                                <div class="p-3 mb-3 bg-success bg-opacity-10 rounded-4">
+                                    <p class="text-success fw-bold mb-0"><i class="bi bi-check-circle-fill me-1"></i> COURSE COMPLETED!</p>
+                                </div>
+                            {% endif %}
+                        {% else %}
+                            <a href="{% url 'watch_lesson' lessons.first.id %}" class="btn btn-primary w-100 rounded-pill fw-bold py-3 mb-3 shadow-sm">CONTINUE LEARNING</a>
+                        {% endif %}
+
+                        <a href="{% url 'start_chat' course.id %}" class="btn btn-outline-primary w-100 rounded-pill py-2 small fw-bold mt-2">
+                            <i class="bi bi-chat-left-dots me-2"></i> 
+                            {% if is_finished %}
+                                VIEW CHAT HISTORY
+                            {% else %}
+                                CHAT WITH INSTRUCTOR
+                            {% endif %}
+                        </a>
+                    </div>
+                    {% endif %}
+
+                    <div class="mt-5">
+                        <h6 class="fw-bold text-uppercase small mb-3">Masterclass Benefits:</h6>
+                        <div class="small text-secondary">
+                            <p class="mb-2"><i class="bi bi-check2-circle text-primary me-2"></i> HD Video Content</p>
+                            <p class="mb-2"><i class="bi bi-check2-circle text-primary me-2"></i> Lifetime Access</p>
+                            <p class="mb-2"><i class="bi bi-check2-circle text-primary me-2"></i> Verified Certificate</p>
+                            <p class="mb-0"><i class="bi bi-check2-circle text-primary me-2"></i> 24/7 Doubt Support</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Countdown Timer Logic
+    let countDownDate = new Date().getTime() + (6 * 60 * 60 * 1000);
+    let x = setInterval(function() {
+        let now = new Date().getTime();
+        let distance = countDownDate - now;
+        let hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        let seconds = Math.floor((distance % (1000 * 60)) / 1000);
+        
+        let timerElement = document.getElementById("countdown");
+        if (timerElement) {
+            timerElement.innerHTML = 
+                (hours < 10 ? "0"+hours : hours) + ":" + 
+                (minutes < 10 ? "0"+minutes : minutes) + ":" + 
+                (seconds < 10 ? "0"+seconds : seconds);
+                
+            if (distance < 0) {
+                clearInterval(x);
+                timerElement.innerHTML = "OFFER EXPIRED";
+            }
+        }
+    }, 1000);
+</script>
+{% endblock %}

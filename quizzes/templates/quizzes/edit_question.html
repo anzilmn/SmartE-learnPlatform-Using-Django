@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-lg rounded-4">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h3 class="fw-bold mb-0">Edit Question ✏️</h3>
+                    <p class="text-muted">Course: {{ course.title }}</p>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Question Text</label>
+                            {{ form.text }}
+                        </div>
+
+                        <h5 class="fw-bold mb-3">Choices</h5>
+                        {{ formset.management_form }}
+                        
+                        <div class="row g-3">
+                            {% for choice_form in formset %}
+                            <div class="col-md-6">
+                                <div class="p-3 border rounded-4 bg-light">
+                                    {{ choice_form.id }} <label class="small fw-bold text-muted d-block mb-2">Option {{ forloop.counter }}</label>
+                                    {{ choice_form.text }}
+                                    <div class="form-check mt-2">
+                                        {{ choice_form.is_correct }}
+                                        <label class="form-check-label small text-success fw-bold">Correct Answer</label>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="d-flex gap-2 mt-5">
+                            <button type="submit" class="btn btn-primary rounded-pill px-5 py-2 fw-bold shadow">Save Changes</button>
+                            <a href="{% url 'manage_questions' course.id %}" class="btn btn-light rounded-pill px-4 py-2">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

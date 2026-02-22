@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+
+{% block title %}Leaderboard - Hall of Fame{% endblock %}
+
+{% block content %}
+<style>
+    body { background-color: #f8f9fa; }
+    
+    .podium-container {
+        display: flex;
+        justify-content: center;
+        align-items: flex-end;
+        margin-bottom: 60px;
+        gap: 20px;
+        padding-top: 40px;
+    }
+    .podium-card {
+        background: white;
+        border-radius: 24px;
+        text-align: center;
+        padding: 30px 20px;
+        position: relative;
+        transition: transform 0.3s;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    }
+    .podium-card:hover { transform: translateY(-10px); }
+    
+    /* Order: 2nd place on left, 1st in middle, 3rd on right */
+    .podium-1 { order: 2; min-width: 280px; z-index: 2; border: 3px solid #FFD700; transform: scale(1.1); }
+    .podium-2 { order: 1; min-width: 240px; border: 2px solid #C0C0C0; }
+    .podium-3 { order: 3; min-width: 240px; border: 2px solid #CD7F32; }
+
+    .podium-badge {
+        position: absolute;
+        top: -25px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 1.2rem;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+
+    .badge-1 { background: linear-gradient(45deg, #FFD700, #FDB931); color: #000; }
+    .badge-2 { background: linear-gradient(45deg, #C0C0C0, #E8E8E8); color: #000; }
+    .badge-3 { background: linear-gradient(45deg, #CD7F32, #B87333); color: #fff; }
+
+    .avatar-main {
+        width: 80px; height: 80px;
+        border-radius: 50%;
+        margin-bottom: 15px;
+        object-fit: cover;
+        border: 4px solid #fff;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .initial-avatar-lg {
+        width: 80px; height: 80px;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 15px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white; font-size: 2rem; font-weight: 900;
+    }
+
+    .table-card { border-radius: 25px; border: none; background: white; }
+    .custom-table thead { background: #1a1a1a; color: white; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; }
+    .custom-table tr { border-bottom: 1px solid #f1f3f5; transition: 0.3s; }
+    
+    .rank-pill {
+        width: 32px; height: 32px;
+        background: #f1f3f5; border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 700; color: #495057;
+    }
+
+    .streak-fire { color: #ff4500; font-weight: bold; }
+    .score-badge { background: #e7f3ff; color: #007bff; padding: 4px 12px; border-radius: 8px; font-weight: 800; }
+</style>
+
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="fw-bold display-4">Leaderboard 🏆</h1>
+        <p class="text-muted">The best of the best. Are you on the list, vro?</p>
+    </div>
+
+    <div class="podium-container d-none d-lg-flex">
+        {% for student in top_students|slice:":3" %}
+        <div class="podium-card podium-{{ forloop.counter }}">
+            <div class="podium-badge badge-{{ forloop.counter }}">{{ forloop.counter }}</div>
+            {% if student.profile.image %}
+                <img src="{{ student.profile.image.url }}" class="avatar-main">
+            {% else %}
+                <div class="initial-avatar-lg">{{ student.username|first|upper }}</div>
+            {% endif %}
+            <h4 class="fw-bold mb-1">{{ student.username }}</h4>
+            <div class="mb-2">
+                <span class="text-dark fw-bolder fs-4">{{ student.assessment_score }}</span>
+                <small class="text-muted fw-bold">PTS</small>
+            </div>
+            <p class="text-primary fw-bold mb-1 small">{{ student.courses_count }} Courses Completed</p>
+            {% if student.profile.streak_count > 0 %}
+                <p class="streak-fire mb-2 small"><i class="bi bi-fire"></i> {{ student.profile.streak_count }} Day Streak</p>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card table-card shadow-sm">
+                <div class="table-responsive">
+                    <table class="table custom-table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-4 py-4">Rank</th>
+                                <th>Learner</th>
+                                <th class="text-center">Score</th>
+                                <th class="text-center">Courses</th>
+                                <th class="text-center">Streak</th>
+                                <th class="text-end pe-4">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in top_students %}
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="rank-pill {% if forloop.counter <= 3 %}bg-warning text-dark{% endif %}">
+                                        {{ forloop.counter }}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if student.profile.image %}
+                                            <img src="{{ student.profile.image.url }}" width="40" height="40" class="rounded-circle me-3">
+                                        {% else %}
+                                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                                {{ student.username|first|upper }}
+                                            </div>
+                                        {% endif %}
+                                        <div>
+                                            <h6 class="mb-0 fw-bold">{{ student.username }}</h6>
+                                            <small class="text-muted">Joined {{ student.date_joined|date:"M Y" }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-center"><span class="score-badge">{{ student.assessment_score }}</span></td>
+                                <td class="text-center fw-bold">{{ student.courses_count }}</td>
+                                <td class="text-center">
+                                    {% if student.profile.streak_count > 0 %}
+                                        <span class="streak-fire"><i class="bi bi-fire"></i> {{ student.profile.streak_count }}</span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end pe-4">
+                                    {% if student.assessment_score > 500 %}
+                                        <span class="badge bg-danger">Elite</span>
+                                    {% elif student.assessment_score > 100 %}
+                                        <span class="badge bg-success">Pro</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Rising Star</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="6" class="text-center py-5">No rankings found yet.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

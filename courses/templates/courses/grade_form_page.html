@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-header bg-dark text-white p-4 rounded-top-4">
+                    <h3 class="mb-0">Grading: {{ submission.user.username }}</h3>
+                    <p class="mb-0 opacity-75">{{ course.title }}</p>
+                </div>
+                <div class="card-body p-5">
+                    <div class="mb-4">
+                        <label class="fw-bold text-muted">Student Project File</label>
+                        <div class="mt-2">
+                            <a href="{{ submission.submission_file.url }}" class="btn btn-primary px-4 py-2" target="_blank">
+                                <i class="bi bi-download"></i> View & Download File
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="p-3 bg-light rounded-3 mb-4">
+                        <small class="fw-bold d-block text-muted mb-1">Student Note:</small>
+                        <p class="mb-0">{{ submission.student_notes|default:"No notes provided." }}</p>
+                    </div>
+
+                    <form method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="submission_id" value="{{ submission.id }}">
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Marks (Max: {{ assessment.max_marks|default:100 }})</label>
+                            <input type="number" name="marks" class="form-control form-control-lg" 
+                                   max="{{ assessment.max_marks|default:100 }}" 
+                                   value="{{ submission.grade|default:0 }}" required>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Teacher Feedback</label>
+                            <textarea name="feedback" class="form-control" rows="5" 
+                                      placeholder="Write your feedback here, vro...">{{ submission.teacher_feedback|default:"" }}</textarea>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg fw-bold rounded-pill shadow">
+                                Save Grade & Update Leaderboard
+                            </button>
+                            <a href="{% url 'gradebook' course.id %}" class="btn btn-link text-muted">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

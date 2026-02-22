@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Profile - {{ student.username }}{% endblock %}
+
+{% block content %}
+<style>
+    body { background-color: #f8f9fa; }
+    .profile-card {
+        border-radius: 24px;
+        background: white;
+        border: 1px solid #e2e8f0;
+        overflow: hidden;
+    }
+    .profile-header {
+        background: linear-gradient(45deg, #0d6efd, #0dcaf0);
+        height: 120px;
+    }
+    .avatar-wrapper {
+        margin-top: -60px;
+        padding: 5px;
+        background: white;
+        border-radius: 50%;
+        display: inline-block;
+    }
+    .avatar-img {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    .course-mini-card {
+        border-radius: 15px;
+        transition: transform 0.2s;
+        border: 1px solid #edf2f7;
+        background: white;
+    }
+    .course-mini-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+    }
+    .progress {
+        background-color: #f0f2f5;
+        border-radius: 10px;
+    }
+</style>
+
+<div class="container py-5">
+    <div class="mb-4">
+        <a href="javascript:history.back()" class="btn btn-light border rounded-pill px-4 shadow-sm">
+            <i class="bi bi-arrow-left me-2"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-4">
+            <div class="profile-card shadow-sm mb-4">
+                <div class="profile-header"></div>
+                <div class="text-center pb-4">
+                    <div class="avatar-wrapper shadow-sm">
+                        {% if student.profile.profile_picture %}
+                            <img src="{{ student.profile.profile_picture.url }}" class="avatar-img" alt="Profile">
+                        {% else %}
+                            <img src="https://ui-avatars.com/api/?name={{ student.username }}&background=random&size=128" class="avatar-img" alt="Profile">
+                        {% endif %}
+                    </div>
+                    <h3 class="fw-bold mt-3 mb-0">{{ student.first_name|default:student.username }} {{ student.last_name }}</h3>
+                    <p class="text-muted small">@{{ student.username }}</p>
+                    
+                    <div class="px-4">
+                        <hr class="opacity-50">
+                        <div class="d-flex justify-content-between text-start mb-2">
+                            <span class="text-muted small">Email</span>
+                            <span class="fw-bold small">{{ student.email }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between text-start mb-2">
+                            <span class="text-muted small">Date Joined</span>
+                            <span class="fw-bold small">{{ student.date_joined|date:"M d, Y" }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-grid">
+             <div class="d-grid">
+    <a href="mailto:{{ student.email }}?subject=Regarding your course: {{ enrolled_courses.first.course.title }}" 
+       class="btn btn-primary rounded-pill shadow-sm">
+        <i class="bi bi-envelope me-2"></i> Contact Student
+    </a>
+</div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="d-flex align-items-center mb-4">
+                <h4 class="fw-bold mb-0">Courses Progress</h4>
+                <span class="badge bg-primary rounded-pill ms-3">{{ enrolled_courses.count }} Enrolled</span>
+            </div>
+            
+            <div class="row g-4">
+                {% for enrollment in enrolled_courses %}
+                <div class="col-md-6">
+                    <div class="card course-mini-card h-100 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="fw-bold text-dark mb-0">{{ enrollment.course.title }}</h6>
+                                {% if enrollment.status == 'finished' %}
+                                    <span class="badge bg-success-soft text-success small">Completed</span>
+                                {% else %}
+                                    <span class="badge bg-primary-soft text-primary small">In Progress</span>
+                                {% endif %}
+                            </div>
+
+                         
+
+                            <div class="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
+                                <small class="text-muted">Enrolled: {{ enrollment.enrolled_at|date:"M Y" }}</small>
+                                <a href="{% url 'course_detail' enrollment.course.id %}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+    View Page
+</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="text-center py-5 bg-white rounded-4 border border-dashed shadow-sm">
+                        <i class="bi bi-journal-x display-1 text-muted opacity-25"></i>
+                        <p class="mt-3 text-muted">Vro, this student hasn't started any of your courses yet.</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

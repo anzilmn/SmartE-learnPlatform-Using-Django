@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-lg rounded-4 p-4 p-md-5">
+                <div class="text-center mb-4">
+                    <h2 class="fw-bold text-dark">Edit Masterclass Info</h2>
+                    <p class="text-muted">Update your course details to keep your students informed.</p>
+                </div>
+
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="mb-4">
+                        <label class="fw-bold mb-1 text-primary"><i class="bi bi-type me-2"></i>Course Title</label>
+                        {{ form.title }}
+                        {% if form.title.errors %}<div class="text-danger small">{{ form.title.errors }}</div>{% endif %}
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="fw-bold mb-1 text-primary"><i class="bi bi-text-paragraph me-2"></i>Description</label>
+                        {{ form.description }}
+                        {% if form.description.errors %}<div class="text-danger small">{{ form.description.errors }}</div>{% endif %}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <label class="fw-bold mb-1 text-primary"><i class="bi bi-currency-rupee me-2"></i>Price (₹)</label>
+                            {{ form.price }}
+                            {% if form.price.errors %}<div class="text-danger small">{{ form.price.errors }}</div>{% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-4">
+                            <label class="fw-bold mb-1 text-primary"><i class="bi bi-image me-2"></i>Update Thumbnail</label>
+                            {{ form.thumbnail }}
+                            {% if form.thumbnail.errors %}<div class="text-danger small">{{ form.thumbnail.errors }}</div>{% endif %}
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-3 mt-4">
+                        <button type="submit" class="btn btn-primary py-3 rounded-pill fw-bold shadow">
+                            <i class="bi bi-check-circle me-2"></i>SAVE CHANGES
+                        </button>
+                        
+                        <a href="{% url 'course_detail' course.id %}" class="btn btn-light py-3 rounded-pill fw-bold text-muted">
+                            Cancel & Go Back
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

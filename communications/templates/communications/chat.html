@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+
+{% block title %}Doubt Session | {{ thread.course.title }}{% endblock %}
+
+{% block content %}
+<style>
+    #chat-box::-webkit-scrollbar { width: 5px; }
+    #chat-box::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
+    .message-dropdown .btn { padding: 0; color: inherit; opacity: 0.5; }
+    .message-dropdown .btn:hover { opacity: 1; }
+    .attachment-preview { max-width: 250px; border-radius: 10px; margin-top: 5px; cursor: pointer; }
+    .recording-active { color: #dc3545 !important; animation: blink 1.5s infinite; }
+    @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+    .voice-msg-container { min-width: 160px; }
+    .italic { font-style: italic; }
+</style>
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-3">
+                <div class="card-body bg-dark text-white p-3">
+                    <div class="d-flex align-items-center">
+                        <a href="{% if user == thread.teacher %}{% url 'course_doubts_list' thread.course.id %}{% else %}{% url 'course_list' %}{% endif %}" class="text-white me-3 text-decoration-none">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0 fw-bold">{{ thread.course.title }}</h6>
+                            <small class="text-secondary">Chat with {% if user == thread.student %}{{ thread.teacher.username }}{% else %}{{ thread.student.username }}{% endif %}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 p-3 mb-3" style="height: 60vh; overflow-y: auto; background: #f0f2f5;" id="chat-box">
+                {% for msg in chat_messages %}
+                    <div class="d-flex {% if msg.sender == user %}justify-content-end{% else %}justify-content-start{% endif %} mb-3">
+                        <div class="position-relative p-3 rounded-4 shadow-sm" 
+                             style="max-width: 75%; {% if msg.sender == user %}background: #0d6efd; color: white; border-bottom-right-radius: 2px;{% else %}background: white; color: #333; border-bottom-left-radius: 2px;{% endif %}">
+                            
+                            {% if msg.sender == user and not is_finished %}
+                            <div class="dropdown position-absolute top-0 end-0 mt-1 me-2 message-dropdown">
+                                <button class="btn btn-sm" data-bs-toggle="dropdown">
+                                    <i class="bi bi-three-dots-vertical" style="font-size: 0.7rem;"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow border-0 small">
+                                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editMsg{{ msg.id }}"><i class="bi bi-pencil me-2"></i>Edit</a></li>
+                                    <li>
+                                        <form action="{% url 'delete_message' msg.id %}" method="post">
+                                            {% csrf_token %}
+                                            <button type="submit" class="dropdown-item text-danger" onclick="return confirm('Delete message, vro?')"><i class="bi bi-trash me-2"></i>Delete</button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                            {% endif %}
+
+                            {% if msg.attachment %}
+                                <div class="mb-2">
+                                    {% if ".mp3" in msg.attachment.url or ".wav" in msg.attachment.url or "audio" in msg.attachment.name %}
+                                        <div class="voice-msg-container">
+                                            <audio controls style="height: 30px; width: 100%;">
+                                                <source src="{{ msg.attachment.url }}" type="audio/wav">
+                                            </audio>
+                                        </div>
+                                    {% elif ".jpg" in msg.attachment.url or ".png" in msg.attachment.url or ".jpeg" in msg.attachment.url %}
+                                        <img src="{{ msg.attachment.url }}" class="attachment-preview img-fluid" onclick="window.open(this.src)">
+                                    {% else %}
+                                        <a href="{{ msg.attachment.url }}" target="_blank" class="btn btn-sm btn-light rounded-pill">
+                                            <i class="bi bi-file-earmark-arrow-down"></i> Download File
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+
+                            <p class="mb-1 small text-break">{{ msg.text }}</p>
+                            
+                            <div class="d-flex justify-content-between align-items-center mt-1">
+                                <small style="font-size: 0.55rem; opacity: 0.7;">{{ msg.created_at|date:"H:i" }}</small>
+                                {% if msg.is_edited %}<small style="font-size: 0.55rem; opacity: 0.7;" class="ms-2 italic">edited</small>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if msg.sender == user and not is_finished %}
+                    <div class="modal fade" id="editMsg{{ msg.id }}" tabindex="-1">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <form action="{% url 'edit_message' msg.id %}" method="post" class="modal-content border-0 rounded-4 shadow">
+                                {% csrf_token %}
+                                <div class="modal-header border-0 pb-0"><h6>Edit Message</h6></div>
+                                <div class="modal-body">
+                                    <textarea name="text" class="form-control border-0 bg-light" rows="3" required>{{ msg.text }}</textarea>
+                                </div>
+                                <div class="modal-footer border-0 pt-0">
+                                    <button type="submit" class="btn btn-primary btn-sm rounded-pill px-4">Update</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% empty %}
+                    <div class="text-center mt-5 text-muted">
+                        <i class="bi bi-chat-dots fs-1"></i>
+                        <p class="small">No messages yet. Start the session!</p>
+                    </div>
+                {% endfor %}
+            </div>
+
+            {% if is_finished %}
+                <div class="card border-0 shadow-sm rounded-4 p-3 text-center bg-white border">
+                    <div class="text-muted small fw-bold">
+                        <i class="bi bi-lock-fill me-1 text-danger"></i> 
+                        CHAT CLOSED: Read-only mode active. 🎓
+                    </div>
+                </div>
+            {% else %}
+                <form method="post" enctype="multipart/form-data" id="chat-form" class="card border-0 shadow-sm rounded-4 p-2">
+                    {% csrf_token %}
+                    
+                    <div id="recording-status" class="px-3 py-1 d-none text-danger small fw-bold">
+                        <i class="bi bi-record-circle-fill"></i> Recording... <span id="timer">0s</span>
+                    </div>
+
+                    <div class="input-group align-items-center">
+                        <label class="btn btn-light rounded-circle p-2 ms-1 mb-0" title="Attach file">
+                            <i class="bi bi-plus-lg"></i>
+                            <input type="file" name="attachment" id="file-input" class="d-none">
+                        </label>
+                        
+                        <input type="text" name="message" id="msg-input" class="form-control border-0 shadow-none ps-3" placeholder="Type a doubt..." autocomplete="off">
+                        
+                        <button type="button" id="voice-btn" class="btn btn-light rounded-circle p-2 mx-1 mb-0" title="Hold to record">
+                            <i class="bi bi-mic" id="mic-icon"></i>
+                        </button>
+
+                        <button class="btn btn-primary rounded-pill px-4 mb-0" type="submit" id="send-btn">
+                            <i class="bi bi-send-fill"></i>
+                        </button>
+                    </div>
+                    <div id="file-name-preview" class="ps-5 small text-muted"></div>
+                </form>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+
+<script>
+    const chatBox = document.getElementById("chat-box");
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    // File Preview
+    const fileInput = document.getElementById('file-input');
+    if (fileInput) {
+        fileInput.onchange = function() {
+            if(this.files.length > 0) {
+                document.getElementById('file-name-preview').innerText = "Selected: " + this.files[0].name;
+            }
+        };
+    }
+
+    // Voice Recording Logic
+    const voiceBtn = document.getElementById('voice-btn');
+    if (voiceBtn) {
+        let mediaRecorder;
+        let audioChunks = [];
+        let timerInterval;
+        const micIcon = document.getElementById('mic-icon');
+        const statusDiv = document.getElementById('recording-status');
+        const timerSpan = document.getElementById('timer');
+
+        voiceBtn.onclick = async () => {
+            if (!mediaRecorder || mediaRecorder.state === "inactive") {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+                    mediaRecorder.ondataavailable = (event) => audioChunks.push(event.data);
+                    mediaRecorder.onstop = () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                        const file = new File([audioBlob], "voice_note.wav", { type: "audio/wav" });
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(file);
+                        document.getElementById('file-input').files = dataTransfer.files;
+                        
+                        micIcon.classList.remove('bi-stop-circle-fill', 'recording-active');
+                        micIcon.classList.add('bi-mic');
+                        statusDiv.classList.add('d-none');
+                        document.getElementById('file-name-preview').innerText = "Voice recording ready!";
+                        clearInterval(timerInterval);
+                    };
+                    mediaRecorder.start();
+                    let seconds = 0;
+                    statusDiv.classList.remove('d-none');
+                    micIcon.classList.add('bi-stop-circle-fill', 'recording-active');
+                    micIcon.classList.remove('bi-mic');
+                    timerInterval = setInterval(() => {
+                        seconds++;
+                        timerSpan.innerText = seconds + 's';
+                    }, 1000);
+                } catch (err) {
+                    alert("Microphone access denied, vro!");
+                }
+            } else {
+                mediaRecorder.stop();
+            }
+        };
+    }
+</script>
+{% endblock %}

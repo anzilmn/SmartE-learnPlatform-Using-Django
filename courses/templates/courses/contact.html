@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}Contact Support - Smart Learn{% endblock %}
+
+{% block content %}
+<style>
+    .support-container { min-height: 80vh; display: flex; align-items: center; padding: 40px 0; }
+    .support-card { border-radius: 25px; overflow: hidden; border: none; }
+    .support-info-panel { background: linear-gradient(135deg, #0d6efd 0%, #004bad 100%); color: white; padding: 40px; }
+    .form-panel { background: white; padding: 40px; }
+    .custom-input { border: 2px solid #f8f9fa !important; border-radius: 12px !important; padding: 12px 15px; }
+    .contact-item { display: flex; align-items: center; margin-bottom: 15px; background: rgba(255,255,255,0.1); padding: 15px; border-radius: 15px; }
+    .reply-box { background-color: #f0f7ff; border-left: 5px solid #0d6efd; border-radius: 10px; }
+</style>
+
+<div class="container support-container">
+    <div class="row justify-content-center w-100 flex-column align-items-center">
+        
+        <div class="col-lg-10 mb-5">
+            <div class="card support-card shadow-lg">
+                <div class="row g-0">
+                    <div class="col-md-5 support-info-panel">
+                        <div class="text-center mb-3"><i class="bi bi-chat-right-dots-fill fs-1"></i></div>
+                        <h2 class="fw-bold mb-3">We've got your back, vro!</h2>
+                        <p class="opacity-75 mb-4">Whether it's a payment delay or a technical glitch, our team is ready to jump in.</p>
+                        
+                        <div class="contact-item">
+                            <i class="bi bi-envelope-fill me-3 fs-4"></i>
+                            <div><small class="d-block opacity-75">Email us at</small><strong>support@smartlearn.com</strong></div>
+                        </div>
+                        <div class="contact-item">
+                            <i class="bi bi-whatsapp me-3 fs-4"></i>
+                            <div><small class="d-block opacity-75">WhatsApp Support</small><strong>+91 9446550263</strong></div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-7 form-panel">
+                        <h3 class="fw-bold mb-1">Send a Message</h3>
+                        <p class="text-muted small mb-4">Expect a response within 1-2 hours.</p>
+
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold text-uppercase">Reason for Contact</label>
+                                <select name="subject" class="form-select custom-input bg-light" required>
+                                    <option value="Payment Verification" selected>Payment Verification Delay</option>
+                                    <option value="Course Access">Cannot Access Course</option>
+                                    <option value="Technical Issue">Technical Bug</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label small fw-bold text-uppercase">Your Message</label>
+                                <textarea name="message" class="form-control custom-input bg-light" rows="4" placeholder="Explain your issue clearly..." required></textarea>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100 py-3 fw-bold rounded-pill shadow">
+                                Send Ticket <i class="bi bi-send-fill ms-2"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-10">
+            <h4 class="fw-bold mb-4"><i class="bi bi-clock-history me-2"></i> Your Ticket History</h4>
+            {% for ticket in tickets %}
+            <div class="card mb-3 border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="badge bg-primary rounded-pill">{{ ticket.subject }}</span>
+                        <small class="text-muted">{{ ticket.created_at|date:"D, d M Y" }}</small>
+                    </div>
+                    <p class="mb-3"><strong>Question:</strong> {{ ticket.message }}</p>
+
+                    {% if ticket.admin_reply %}
+                    <div class="p-3 reply-box">
+                        <div class="d-flex justify-content-between mb-2">
+                            <strong class="text-primary"><i class="bi bi-person-badge-fill me-1"></i> Admin Response:</strong>
+                            <small class="text-muted">{{ ticket.replied_at|date:"M d, H:i" }}</small>
+                        </div>
+                        <p class="mb-0 text-dark">{{ ticket.admin_reply }}</p>
+                    </div>
+                    {% else %}
+                    <div class="text-muted small"><i class="bi bi-hourglass-split me-1"></i> Waiting for Admin to reply...</div>
+                    {% endif %}
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-4 text-muted">No messages sent yet, vro.</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

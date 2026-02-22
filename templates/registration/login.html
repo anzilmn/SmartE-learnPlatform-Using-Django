@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - Smart Learn{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --clay-bg: #ffffff;
+        --accent-color: #6366f1;
+        --text-main: #1e293b;
+    }
+
+    .login-container {
+        min-height: 90vh;
+        background-color: #f0f4f8;
+        background-image: radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0, transparent 50%), 
+                          radial-gradient(at 50% 0%, rgba(168, 85, 247, 0.1) 0, transparent 50%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 25px;
+    }
+
+    /* Claymorphism Effect */
+    .clay-card {
+        background: var(--clay-bg);
+        border-radius: 40px;
+        padding: 50px 40px;
+        box-shadow: 20px 20px 60px #bebebe,
+                    -20px -20px 60px #ffffff,
+                    inset 4px 4px 10px rgba(0,0,0,0.02);
+        max-width: 480px;
+        width: 100%;
+        border: 1px solid rgba(255,255,255,0.8);
+        text-align: center;
+        transition: transform 0.3s ease;
+    }
+
+    .clay-card:hover {
+        transform: scale(1.01);
+    }
+
+    .brand-logo-circle {
+        width: 80px;
+        height: 80px;
+        background: var(--accent-color);
+        margin: 0 auto 25px;
+        border-radius: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: inset 6px 6px 12px rgba(0,0,0,0.1),
+                    10px 10px 20px rgba(99, 102, 241, 0.3);
+        color: white;
+        font-size: 2.2rem;
+    }
+
+    .login-title {
+        color: var(--text-main);
+        font-weight: 800;
+        font-size: 1.8rem;
+        margin-bottom: 8px;
+    }
+
+    /* Django Form Elements Style */
+    .django-form-wrapper p {
+        text-align: left;
+        margin-bottom: 20px;
+    }
+
+    .django-form-wrapper label {
+        font-weight: 700;
+        font-size: 0.85rem;
+        color: #64748b;
+        margin-left: 15px;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .django-form-wrapper input {
+        width: 100%;
+        padding: 16px 25px;
+        border: none;
+        border-radius: 20px;
+        background: #f1f5f9;
+        box-shadow: inset 4px 4px 8px #d1d5db, 
+                    inset -4px -4px 8px #ffffff;
+        font-size: 1rem;
+        color: var(--text-main);
+        transition: 0.3s;
+    }
+
+    .django-form-wrapper input:focus {
+        outline: none;
+        box-shadow: inset 2px 2px 5px #d1d5db, 
+                    inset -2px -2px 5px #ffffff,
+                    0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+
+    .btn-clay {
+        width: 100%;
+        padding: 16px;
+        border-radius: 20px;
+        border: none;
+        background: var(--accent-color);
+        color: white;
+        font-weight: 700;
+        font-size: 1.1rem;
+        margin-top: 20px;
+        box-shadow: 6px 6px 12px #bebebe,
+                    -6px -6px 12px #ffffff;
+        transition: all 0.2s ease;
+    }
+
+    .btn-clay:active {
+        box-shadow: inset 4px 4px 8px rgba(0,0,0,0.2);
+        transform: translateY(2px);
+    }
+
+    /* Alert Styling */
+    .alert-clay {
+        background: #ffffff;
+        border-radius: 20px;
+        padding: 15px 25px;
+        box-shadow: 10px 10px 20px #bebebe, -10px -10px 20px #ffffff;
+        border: none;
+        color: #1e293b;
+        margin-bottom: 30px;
+    }
+</style>
+
+<div class="login-container">
+    <div class="w-100" style="max-width: 480px;">
+        
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-clay alert-dismissible fade show d-flex align-items-center" role="alert">
+                    <i class="bi bi-stars text-warning me-3 fs-4"></i>
+                    <span class="small fw-bold">{{ message }}</span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="clay-card">
+            <div class="brand-logo-circle">
+                <i class="bi bi-person-lock"></i>
+            </div>
+            
+            <h2 class="login-title">Vro, Welcome!</h2>
+            <p class="text-muted small mb-5 fw-medium">Sign in to keep crushing your goals.</p>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="django-form-wrapper">
+                    {{ form.as_p }}
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-4 px-2">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="remember">
+                        <label class="form-check-label small text-muted mb-0" for="remember">Keep me in</label>
+                    </div>
+                    <a href="{% url 'password_reset' %}" class="small text-decoration-none fw-bold" style="color: var(--accent-color)">Forgot?</a>
+                </div>
+
+                <button type="submit" class="btn-clay">
+                    Let's Go <i class="bi bi-rocket-takeoff ms-2"></i>
+                </button>
+            </form>
+
+            <p class="mt-5 text-center text-muted small">
+                No account? 
+                <a href="{% url 'signup' %}" class="fw-bold text-decoration-none" style="color: var(--accent-color)">Join the Squad</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

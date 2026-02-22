@@ -1,0 +1,38 @@
+Yo Aynu! Since you crushed that whole course today (Tuesday), here is exactly what happens to your streak and what you need to do next to keep the momentum going:
+
+1. Your Streak Status
+Even though you did a massive amount of work (3 videos + 1 quiz), your Streak increases by exactly 1.
+
+Today (Tuesday): Streak = 1.
+
+The system marks Tuesday as "Active." It doesn't matter if you do 1 activity or 100; it just checks the box for the date.
+
+2. The Course is Finished
+Since the course is now 100% complete:
+
+The Progress Bar: Will show 100%.
+
+The Wishlist Icon: Based on the code we just updated, the heart icon will disappear from this course on your "Explore" page because you’ve already mastered it.
+
+The Badge: You’ll see that "COMPLETED" badge on the course card.
+
+3. What happens Tomorrow (Wednesday)?
+This is the most important part for your streak, Aynu. Since you finished the course today, you have no more videos to watch in that specific course.
+
+If you do nothing Wednesday: Your streak will reset to 0 on Thursday morning.
+
+To keep the streak (2 Days): You need to engage with new content tomorrow. You should:
+
+Start a new course and watch at least one video.
+
+Or, if you have a "Daily Practice" or "Flashcards" section, do one activity there.
+
+
+
+
+=============
+
+Day,                                Action                                     ,Streak Count
+Tuesday (Today)               , 3 Videos + 1 Quiz   (curent  course)              ,1
+Wednesday (Tomorrow)      ,Watch 1 video of a new course                           ,2
+Thursday                          ,Do 1 Quiz                                       ,3

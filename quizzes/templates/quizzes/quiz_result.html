@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .result-container {
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+        padding: 40px 0;
+    }
+    .result-card {
+        border: none;
+        border-radius: 30px;
+        background: #ffffff;
+        box-shadow: 0 25px 50px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    .result-header {
+        padding: 40px 40px 20px 40px;
+    }
+    /* Animated Circular Score */
+    .score-circle {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        border: 8px solid #f8f9fa;
+        background: #fff;
+    }
+    .pass-glow {
+        border-color: #d1e7dd;
+        box-shadow: 0 0 20px rgba(25, 135, 84, 0.2);
+    }
+    .fail-glow {
+        border-color: #f8d7da;
+        box-shadow: 0 0 20px rgba(220, 53, 69, 0.2);
+    }
+    
+    .btn-premium {
+        padding: 15px 30px;
+        border-radius: 50px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: all 0.3s;
+    }
+    .btn-certificate {
+        background: linear-gradient(45deg, #198754, #20c997);
+        border: none;
+        color: white;
+    }
+    .btn-certificate:hover {
+        transform: scale(1.05);
+        box-shadow: 0 10px 20px rgba(25, 135, 84, 0.3);
+        color: white;
+    }
+    .review-box {
+        background: #f8f9fa;
+        border-radius: 20px;
+        padding: 20px;
+        margin-top: 20px;
+    }
+
+    /* Vro: Star Rating Styling */
+    .star-rating {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: center;
+    }
+    .star-rating input { display: none; }
+    .star-rating label {
+        font-size: 2.5rem;
+        color: #ddd;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin: 0 5px;
+    }
+    .star-rating input:checked ~ label { color: #ffc107; }
+    .star-rating label:hover,
+    .star-rating label:hover ~ label { color: #ffdb70; }
+</style>
+
+<div class="container result-container">
+    <div class="row justify-content-center w-100">
+        <div class="col-md-8 col-lg-6">
+            <div class="card result-card text-center p-0">
+                
+                {% if passed %}
+                <div class="result-header">
+                    <div class="score-circle pass-glow">
+                        <h2 class="fw-bold mb-0 text-success">{{ percentage }}%</h2>
+                    </div>
+                    <div class="mb-2 display-6">🏆</div>
+                    <h1 class="fw-black text-uppercase tracking-tighter" style="color: #157347;">Crushed It!</h1>
+                    <p class="text-muted px-4">Excellent work, vro! You've mastered the concepts in <b>{{ quiz.course.title }}</b>.</p>
+                </div>
+
+                <div class="card-body px-5">
+                    <div class="d-grid gap-3">
+                      {% if is_assessment_upload %}
+    <div class="alert alert-warning rounded-pill border-0 py-3 fw-bold shadow-sm">
+        <i class="bi bi-clock-history me-2"></i> Project is under review by teacher!
+    </div>
+    <p class="small text-muted">You can claim your certificate once the teacher approves your work.</p>
+{% else %}
+    <a href="{% url 'generate_certificate' course.id %}" class="btn btn-premium btn-certificate shadow-lg animate__animated animate__pulse animate__infinite">
+        <i class="bi bi-award-fill me-2"></i> Claim Certificate
+    </a>
+{% endif %}
+                    </div>
+                    
+                    <div class="review-box mt-4 text-start">
+                        <h5 class="fw-bold mb-3 text-center">Enjoyed the Masterclass, Vro?</h5>
+                        <form method="POST" action="{% url 'submit_review' quiz.course.id %}">
+                            {% csrf_token %}
+                            <div class="star-rating mb-3">
+                                <input type="radio" id="star5" name="rating" value="5" required /><label for="star5" title="5 stars">★</label>
+                                <input type="radio" id="star4" name="rating" value="4" /><label for="star4" title="4 stars">★</label>
+                                <input type="radio" id="star3" name="rating" value="3" /><label for="star3" title="3 stars">★</label>
+                                <input type="radio" id="star2" name="rating" value="2" /><label for="star2" title="2 stars">★</label>
+                                <input type="radio" id="star1" name="rating" value="1" /><label for="star1" title="1 star">★</label>
+                            </div>
+                            <div class="mb-3">
+                                <textarea name="comment" class="form-control border-0 shadow-sm" rows="3" placeholder="Drop a review for the instructor..." style="border-radius: 15px;"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-dark w-100 rounded-pill fw-bold">Submit Review</button>
+                        </form>
+                    </div>
+                    </div>
+
+                {% else %}
+                <div class="result-header">
+                    <div class="score-circle fail-glow">
+                        <h2 class="fw-bold mb-0 text-danger">{{ percentage }}%</h2>
+                    </div>
+                    <div class="mb-2 display-6">🎯</div>
+                    <h1 class="fw-bold" style="color: #bb2d3b;">Keep Going!</h1>
+                    <p class="text-muted">You need <b>{{ quiz.pass_score }}%</b> to pass. You are just a few lessons away from perfection!</p>
+                </div>
+
+                <div class="card-body px-5 pb-5">
+                    <div class="d-grid gap-3">
+                        <a href="{% url 'take_quiz' quiz.id %}" class="btn btn-premium btn-outline-danger py-3">
+                            <i class="bi bi-arrow-clockwise me-2"></i> Try Again, Vro
+                        </a>
+                        <a href="{% url 'course_detail' quiz.course.id %}" class="btn btn-light rounded-pill py-3 fw-bold">
+                            <i class="bi bi-book-half me-2"></i> Review Lessons
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="review-box mx-4 mb-4 mt-3">
+                    <div class="row align-items-center">
+                        <div class="col-6 text-start border-end">
+                            <label class="text-muted small d-block">Score Accuracy</label>
+                            <span class="fw-bold fs-5 text-dark">{{ score }} / {{ total }}</span>
+                        </div>
+                        <div class="col-6 text-end">
+                            <a href="{% url 'course_list' %}" class="text-decoration-none small fw-bold text-primary">
+                                Back to Gallery <i class="bi bi-chevron-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if passed %}
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+<script>
+    var end = Date.now() + (2 * 1000);
+    (function frame() {
+        confetti({
+            particleCount: 3,
+            angle: 60,
+            spread: 55,
+            origin: { x: 0 },
+            colors: ['#198754', '#20c997']
+        });
+        confetti({
+            particleCount: 3,
+            angle: 120,
+            spread: 55,
+            origin: { x: 1 },
+            colors: ['#198754', '#20c997']
+        });
+
+        if (Date.now() < end) {
+            requestAnimationFrame(frame);
+        }
+    }());
+</script>
+{% endif %}
+{% endblock %}

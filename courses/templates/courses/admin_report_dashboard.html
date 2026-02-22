@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">🚩 Admin Dashboard</h2>
+        <span class="badge bg-danger rounded-pill px-3">{{ pending_count }} Pending Reports</span>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 mb-5">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0 fw-bold text-primary">Pending Reports</h5>
+        </div>
+        <div class="table-responsive p-3">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Reporter</th>
+                        <th>Offender</th>
+                        <th>Status/Content</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for report in pending_reports %}
+                    <tr>
+                        <td><span class="badge bg-secondary">@{{ report.reporter.username }}</span></td>
+                        <td><span class="text-danger fw-bold">@{{ report.offender.username }}</span></td>
+                        <td>
+                            {% if report.comment %}
+                                <span class="badge bg-info text-dark mb-1">Live on Site</span><br>
+                                <small class="text-muted italic">"{{ report.comment.content|truncatechars:50 }}"</small>
+                            {% else %}
+                                <span class="badge bg-light text-muted">Comment Already Deleted</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'admin_block_user' report.offender.id %}?comment_id={{ report.comment.id }}" 
+                                   class="btn btn-sm btn-danger rounded-pill px-3"
+                                   onclick="return confirm('Block @{{ report.offender.username }}? This specific comment will be PERMANENTLY DELETED from the lesson.')">
+                                   Block & Wipe Content
+                                </a>
+                                
+                                <a href="{% url 'resolve_report' report.id %}" class="btn btn-sm btn-outline-success rounded-pill px-3">Ignore/Resolve</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" class="text-center py-5 text-muted">No reports to review, vro!</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-4 mt-5">
+        <h3 class="fw-bold text-dark">🚫 Blocked Users</h3>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 mb-5">
+        <div class="table-responsive p-3">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Username</th>
+                        <th>Access Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for profile in blocked_profiles %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="bg-danger rounded-circle me-2" style="width: 10px; height: 10px;"></div>
+                                <span class="fw-bold">@{{ profile.user.username }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger">
+                                BANNED (Access Revoked)
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{% url 'admin_unblock_user' profile.user.id %}" 
+                               class="btn btn-sm btn-success rounded-pill px-4"
+                               onclick="return confirm('Restore access for @{{ profile.user.username }}?')">
+                               <i class="bi bi-unlock-fill me-1"></i> Restore Access
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3" class="text-center py-4 text-muted">No users are currently blocked, vro.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .table-hover tbody tr:hover {
+        background-color: rgba(0,0,0,.02);
+    }
+    .rounded-4 { border-radius: 1rem !important; }
+    .italic { font-style: italic; }
+</style>
+{% endblock %}

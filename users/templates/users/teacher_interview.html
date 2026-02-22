@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Teacher Interview{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-7">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold">Join Our Team 🎓</h2>
+                <p class="text-muted">Fill out these final details to start your journey as an instructor.</p>
+            </div>
+
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="bg-primary p-2"></div>
+                <div class="card-body p-5">
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label class="fw-bold mb-2 text-dark">About Your Experience</label>
+                            {{ form.bio }}
+                            <div class="form-text">Briefly describe your expertise and teaching background.</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="fw-bold mb-2 text-dark">Certification / ID Proof</label>
+                            {{ form.certificate }}
+                            <div class="form-text text-danger">Upload a PDF or Image of your qualification (Max 5MB).</div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 py-3 rounded-pill fw-bold shadow">
+                            Submit Application <i class="bi bi-rocket-takeoff ms-2"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

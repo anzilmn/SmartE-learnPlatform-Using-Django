@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Smart Learn | Elite E-Learning{% endblock %}</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        /* --- THEME ENGINE --- */
+        :root {
+            --bg-color: #fcfcfd;
+            --text-color: #1a1a1a;
+            --card-bg: #ffffff;
+            --border-color: #f1f3f5;
+            --glass-bg: rgba(255, 255, 255, 0.95);
+            --primary-accent: #0d6efd;
+            --dropdown-hover: #f8f9fa;
+            --notif-unread-bg: #f0f7ff;
+            --scrollbar-track: #f1f1f1;
+            --scrollbar-thumb: #ccc;
+        }
+
+        /* Dark Mode Overrides */
+        [data-bs-theme="dark"] {
+            --bg-color: #0b0f19;
+            --text-color: #f8fafc;
+            --card-bg: #161b28;
+            --border-color: #2d3748;
+            --glass-bg: rgba(22, 27, 40, 0.95);
+            --dropdown-hover: #1e293b;
+            --notif-unread-bg: #1e293b;
+            --scrollbar-track: #0b0f19;
+            --scrollbar-thumb: #334155;
+        }
+
+        body { 
+            background-color: var(--bg-color); 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Premium Navbar */
+        .navbar { 
+            background: #111111 !important; /* Keep navbar dark always for elite look */
+            backdrop-filter: blur(10px);
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .navbar-brand { font-size: 1.4rem; letter-spacing: -0.5px; }
+        .main-content { min-height: 85vh; background-color: var(--bg-color); }
+
+        /* Navigation Links */
+        .nav-link { 
+            font-size: 0.95rem;
+            font-weight: 600; 
+            color: rgba(255,255,255,0.8) !important;
+            transition: all 0.3s; 
+        }
+        .nav-link:hover { color: #fff !important; transform: translateY(-1px); }
+
+        /* Centered Avatar Circle */
+        .nav-avatar { 
+            width: 32px; 
+            height: 32px; 
+            object-fit: cover; 
+            border-radius: 50%; 
+            border: 2px solid #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background-color: #333;
+        }
+
+        /* Streak Styling 🔥 */
+        .streak-badge {
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            color: #ffc107;
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-weight: 800;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: 0.3s;
+        }
+
+        /* UI Accents */
+        .notification-badge { 
+            font-size: 0.6rem; 
+            padding: 0.35em 0.5em;
+            box-shadow: 0 0 10px rgba(220, 53, 69, 0.4);
+        }
+
+        /* Updated Dropdown Styling */
+        .dropdown-menu { 
+            background-color: var(--card-bg);
+            border-radius: 16px; 
+            border: 1px solid var(--border-color); 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.12) !important; 
+            padding: 12px;
+            min-width: 250px; 
+        }
+
+        .dropdown-item { 
+            color: var(--text-color);
+            border-radius: 8px; 
+            padding: 12px 20px;
+            font-weight: 600; 
+            font-size: 0.95rem; 
+            margin-bottom: 4px; 
+            transition: all 0.2s ease;
+        }
+
+        .dropdown-item:hover {
+            background-color: var(--dropdown-hover);
+            color: var(--primary-accent);
+            padding-left: 25px;
+        }
+
+        .notif-item { border-radius: 10px; margin-bottom: 5px; transition: 0.2s; white-space: normal; color: var(--text-color); }
+        .notif-unread { 
+            background-color: var(--notif-unread-bg) !important; 
+            border-left: 4px solid var(--primary-accent) !important; 
+            font-weight: bold; 
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+        ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 10px; }
+
+        .btn-pill { border-radius: 50px; }
+        .fw-black { font-weight: 800; }
+
+        /* PREMIUM FOOTER STYLING */
+        .premium-footer {
+            background: #111111; /* Keep footer dark for premium look */
+            color: #ffffff;
+            padding: 80px 0 30px;
+            margin-top: 100px;
+        }
+        
+        [data-bs-theme="dark"] .premium-footer {
+            background: #070a11;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .footer-link {
+            color: #94a3b8;
+            text-decoration: none;
+            transition: 0.3s;
+            display: block;
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+        }
+        .footer-link:hover { color: var(--primary-accent); padding-left: 5px; }
+
+        .social-circle {
+            width: 40px;
+            height: 40px;
+            background: #1e293b;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            transition: 0.3s;
+            margin-right: 10px;
+        }
+
+        /* Animation for alerts */
+        .alert { animation: slideInRight 0.5s ease-out; }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .logo-icon-wrapper {
+            background: rgba(13, 110, 253, 0.1);
+            width: 40px; height: 40px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 12px; transition: 0.3s;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+        <div class="container">
+           <a class="navbar-brand fw-black d-flex align-items-center" href="{% url 'course_list' %}">
+                <div class="logo-icon-wrapper me-2">
+                    <i class="bi bi-mortarboard-fill text-primary fs-3"></i>
+                </div>
+                <span class="text-primary">SMART</span>LEARN
+            </a>
+            
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <i class="bi bi-grid-3x3-gap-fill"></i>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <form class="d-flex ms-lg-4 my-2 my-lg-0" action="{% url 'course_list' %}" method="get">
+                    <div class="input-group input-group-sm bg-dark rounded-pill overflow-hidden border border-secondary border-opacity-25">
+                        <span class="input-group-text bg-transparent border-0 text-muted ps-3"><i class="bi bi-search"></i></span>
+                        <input class="form-control bg-transparent border-0 text-white shadow-none" type="search" name="q" placeholder="What do you want to learn?" value="{{ query|default:'' }}">
+                    </div>
+                </form>
+
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item px-2">
+    <button class="btn btn-link nav-link text-warning p-0" id="darkModeToggle" title="Toggle Dark Mode">
+        <i class="bi bi-moon-stars-fill fs-5" id="modeIcon"></i>
+    </button>
+</li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'course_list' %}">Courses</a></li>
+                    
+                    {% if user.is_authenticated %}
+                        {% if user.profile.streak_count > 0 %}
+                        <li class="nav-item me-2">
+                            <div class="streak-badge" title="{{ user.profile.streak_count }} Day Learning Streak!">
+                                <span>{{ user.profile.streak_count }}</span>
+                                <i class="bi bi-fire"></i>
+                            </div>
+                        </li>
+                        {% endif %}
+
+                        <li class="nav-item">
+                            {% if user.is_superuser %}
+                                <a class="nav-link text-warning fw-bold" href="{% url 'admin_analytics' %}">Admin</a>
+                            {% elif user.is_staff %}
+                                <a class="nav-link text-success fw-bold" href="{% url 'instructor_dashboard' %}">Instructor</a>
+                            {% else %}
+                                <a class="nav-link text-info fw-bold" href="{% url 'student_dashboard' %}">Dashboard</a>
+                            {% endif %}
+                        </li>
+
+                        {% if not user.is_staff and not user.is_superuser %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'leaderboard' %}">
+                                <i class="bi bi-trophy-fill text-warning"></i>
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item px-2">
+                            <a class="nav-link position-relative" href="{% url 'wishlist_page' %}">
+                                <i class="bi bi-heart-fill text-danger fs-5"></i>
+                                {% if show_badge %}
+                                    <span class="position-absolute top-1 start-100 translate-middle badge rounded-pill bg-primary notification-badge">
+                                        1
+                                    </span>
+                                {% endif %}
+                            </a>
+                        </li>
+                        {% endif %}
+
+                        <li class="nav-item dropdown px-2">
+                            <a class="nav-link position-relative" href="#" id="notifDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-bell-fill fs-5"></i>
+                                {% if unread_count > 0 %}
+                                    <span class="position-absolute top-1 start-100 translate-middle badge rounded-pill bg-danger notification-badge">
+                                        {{ unread_count }}
+                                    </span>
+                                {% endif %}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow">
+                                <div class="px-3 py-2 d-flex justify-content-between align-items-center mb-2 border-bottom">
+                                    <h6 class="mb-0 fw-bold">Alerts</h6>
+                                    {% if notifications %}
+                                        <form action="{% url 'clear_all_notifications' %}" method="post" class="m-0">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-link p-0 text-danger small text-decoration-none fw-bold" onclick="return confirm('Clear everything, vro?')">Clear All</button>
+                                        </form>
+                                    {% endif %}
+                                </div>
+                                <div style="max-height: 380px; width: 320px; overflow-y: auto; overflow-x: hidden;">
+    {% for notif in notifications %}
+        <a class="dropdown-item py-3 notif-item {% if not notif.is_read %}notif-unread{% endif %}" 
+           href="{% url 'mark_notification_as_read' notif.id %}"
+           style="border-bottom: 1px solid #f8f9fa; white-space: normal;">
+            <div class="d-flex align-items-start">
+                <div class="me-3">
+                    {% with msg=notif.message|lower %}
+                        {% if "graded" in msg or "score" in msg %}
+                            <i class="bi bi-award-fill text-warning fs-5"></i>
+                        {% elif "rejected" in msg or "failed" in msg or "re-upload" in msg %}
+                            <i class="bi bi-x-circle-fill text-danger fs-5"></i>
+                        {% elif "admin warning" in msg %}
+                            <i class="bi bi-exclamation-octagon-fill text-danger fs-5"></i>
+                        {% elif "admin info" in msg %}
+                            <i class="bi bi-info-circle-fill text-info fs-5"></i>
+                        {% elif "admin announcement" in msg %}
+                            <i class="bi bi-megaphone-fill text-success fs-5"></i>
+                        {% elif "streak" in msg %}
+                            <i class="bi bi-fire text-warning fs-5"></i>
+                        {% elif "message" in msg or "chat" in msg or "replied" in msg %}
+                            <i class="bi bi-chat-dots-fill text-info fs-5"></i>
+                        {% elif "doubt" in msg %}
+                            <i class="bi bi-question-circle-fill text-danger fs-5"></i>
+                        {% elif "payment" in msg or "earned" in msg or "verified" in msg %}
+                            <i class="bi bi-cash-stack text-success fs-5"></i>
+                        {% else %}
+                            <i class="bi bi-lightning-charge-fill text-warning fs-5"></i>
+                        {% endif %}
+                    {% endwith %}
+                </div>
+
+                <div class="flex-grow-1">
+                    <p class="mb-1 small fw-bold text-dark" style="line-height: 1.3; font-size: 0.88rem;">
+                        {{ notif.message }}
+                    </p>
+                    <div class="d-flex align-items-center justify-content-between">
+                        <small class="text-muted" style="font-size: 0.7rem;">
+                            <i class="bi bi-clock me-1"></i>{{ notif.created_at|timesince }} ago
+                        </small>
+                        {% if not notif.is_read %}
+                            <span class="badge rounded-pill bg-primary" style="font-size: 0.55rem; letter-spacing: 0.5px;">NEW</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </a>
+    {% empty %}
+        <div class="p-5 text-center">
+            <i class="bi bi-check2-all text-muted opacity-50" style="font-size: 3rem;"></i>
+            <p class="text-muted small mt-2 fw-bold">All caught up, vro!</p>
+        </div>
+    {% endfor %}
+</div>
+                            </ul>
+                        </li>
+
+                        <li class="nav-item dropdown ms-lg-2">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                                <div class="nav-avatar me-2 shadow-sm">
+                                    {% if user.profile.image %}
+                                        <img src="{{ user.profile.image.url }}" style="width:100%; height:100%; object-fit:cover;" 
+                                             onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\'bi bi-person-fill text-white\'></i>';">
+                                    {% else %}
+                                        <i class="bi bi-person-fill text-white"></i>
+                                    {% endif %}
+                                </div>
+                                <span class="d-none d-md-inline">{{ user.username }}</span>
+                            </a>
+
+                            <ul class="dropdown-menu dropdown-menu-end mt-3 animate slideIn">
+                                <li><a class="dropdown-item" href="{% url 'student_profile' %}"><i class="bi bi-person me-2"></i>Profile</a></li>
+                                
+                                {% if user.is_staff and not user.is_superuser %}
+                                    <li><a class="dropdown-item" href="{% url 'instructor_dashboard' %}"><i class="bi bi-speedometer2 me-2"></i>Instructor Dashboard</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'course_create' %}"><i class="bi bi-plus-circle-fill me-2 text-primary"></i>Add New Course</a></li>
+                                {% elif user.is_superuser %}
+                                    <li><a class="dropdown-item" href="{% url 'admin_analytics' %}"><i class="bi bi-graph-up me-2"></i>Site Analytics</a></li>
+                                    <li><a class="dropdown-item" href="/admin/"><i class="bi bi-shield-lock me-2"></i>Django Admin</a></li>
+                                    <li><a class="dropdown-item fw-bold text-danger" href="{% url 'admin_message_center' %}"><i class="bi bi-megaphone me-2"></i>Message Center</a></li>
+                                    <li>
+                                        <a class="dropdown-item fw-bold text-primary" href="{% url 'admin_support_dashboard' %}">
+                                            <i class="bi bi-headset me-2"></i>Support Inbox
+                                            {% if pending_support_count > 0 %}
+                                                <span class="badge bg-danger ms-1">{{ pending_support_count }}</span>
+                                            {% endif %}
+                                        </a>
+                                    </li>
+                                    
+                                {% else %}
+                                    <li><a class="dropdown-item" href="{% url 'wishlist_page' %}"><i class="bi bi-heart me-2 text-danger"></i>My Wishlist</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'student_dashboard' %}"><i class="bi bi-grid me-2"></i>My Learning</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'my_certificates' %}"><i class="bi bi-award me-2"></i>Certificates</a></li>
+                                {% endif %}
+                                
+                                <li><a class="dropdown-item" href="{% url 'profile_settings' %}"><i class="bi bi-gear me-2"></i>Settings</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li class="px-2">
+                                    <form action="{% url 'logout' %}" method="post">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-danger btn-sm w-100 rounded-pill py-2">Logout</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item ms-lg-3">
+                            <a class="nav-link text-white" href="{% url 'login' %}">Sign In</a>
+                        </li>
+                        <li class="nav-item ms-2">
+                            <a class="btn btn-primary btn-pill px-4 fw-bold" href="{% url 'signup' %}">Get Started</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show border-0 rounded-4 shadow-sm" role="alert">
+                    <div class="d-flex align-items-center">
+                        <i class="bi {% if message.tags == 'success' %}bi-check-circle-fill{% else %}bi-exclamation-triangle-fill{% endif %} me-2 fs-5"></i>
+                        <span class="fw-bold small">{{ message }}</span>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <div class="main-content">
+        {% block content %}{% endblock %}
+    </div>
+
+    <footer class="premium-footer">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4 col-md-6">
+                    <h4 class="fw-black text-primary mb-3">SMART LEARN</h4>
+                    <p class="text-secondary small pe-lg-5">
+                        Empowering students worldwide with high-impact, verified digital skills. Join the elite community of modern learners today.
+                    </p>
+                    <div class="mt-4">
+                        <a href="#" class="social-circle text-decoration-none"><i class="bi bi-twitter-x"></i></a>
+                        <a href="#" class="social-circle text-decoration-none"><i class="bi bi-instagram"></i></a>
+                        <a href="#" class="social-circle text-decoration-none"><i class="bi bi-linkedin"></i></a>
+                        <a href="#" class="social-circle text-decoration-none"><i class="bi bi-youtube"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-6 col-6">
+                    <h6 class="fw-bold mb-4">Platform</h6>
+                    <a href="{% url 'course_list' %}" class="footer-link">Browse Courses</a>
+                    <a href="{% url 'wishlist_page' %}" class="footer-link">My Wishlist</a>
+                    <a href="{% url 'leaderboard' %}" class="footer-link">Leaderboard</a>
+                    <a href="#" class="footer-link">Become Mentor</a>
+                </div>
+                <div class="col-lg-2 col-md-6 col-6">
+                    <h6 class="fw-bold mb-4">Support</h6>
+                    <a href="#" class="footer-link">Help Center</a>
+                    <a href="#" class="footer-link">Terms of Service</a>
+                    <a href="#" class="footer-link">Privacy Policy</a>
+                    <a href="{% url 'contact_support' %}" class="text-white fw-bold text-decoration-none small">Contact Support →</a>
+                </div>
+                <div class="col-lg-4 col-md-6">
+                    <h6 class="fw-bold mb-4">Newsletter</h6>
+                    <p class="text-secondary small">Get weekly updates on new courses and industry insights.</p>
+                    <div class="input-group mb-3 border border-secondary border-opacity-25 rounded-pill p-1">
+                        <input type="text" class="form-control bg-transparent border-0 text-white shadow-none ps-3 small" placeholder="Your email address">
+                        <button class="btn btn-primary rounded-pill px-4 btn-sm fw-bold">Join</button>
+                    </div>
+                </div>
+            </div>
+            <hr class="footer-hr">
+            <div class="row align-items-center">
+                <div class="col-md-6 text-center text-md-start">
+                    <p class="text-secondary small mb-0">© 2025 Smart Learn. Engineered with <i class="bi bi-heart-fill text-danger mx-1"></i> for future leaders.</p>
+                </div>
+                <div class="col-md-6 text-center text-md-end mt-2 mt-md-0">
+                    <span class="text-secondary small">Made with Django & Bootstrap 5</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.querySelectorAll('input').forEach(input => {
+            if(!input.classList.contains('form-control')) {
+                input.classList.add('form-control');
+            }
+            input.classList.add('rounded-pill');
+        });
+    </script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(function(alert) {
+            setTimeout(function() {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            }, 5000);
+        });
+    });
+</script>
+
+<script>
+    const htmlElement = document.documentElement;
+    const modeToggle = document.getElementById('darkModeToggle');
+    const modeIcon = document.getElementById('modeIcon');
+
+    // 1. Check for saved theme in localStorage
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    htmlElement.setAttribute('data-bs-theme', savedTheme);
+    updateIcon(savedTheme);
+
+    // 2. Click Event
+    modeToggle.addEventListener('click', () => {
+        const currentTheme = htmlElement.getAttribute('data-bs-theme');
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        
+        htmlElement.setAttribute('data-bs-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        updateIcon(newTheme);
+    });
+
+    function updateIcon(theme) {
+        if (theme === 'dark') {
+            modeIcon.classList.replace('bi-moon-stars-fill', 'bi-sun-fill');
+            modeIcon.classList.add('text-warning');
+        } else {
+            modeIcon.classList.replace('bi-sun-fill', 'bi-moon-stars-fill');
+            modeIcon.classList.remove('text-warning');
+        }
+    }
+</script>
+
+
+</body>
+</html>

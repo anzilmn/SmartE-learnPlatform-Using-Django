@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow border-0 rounded-4">
+        <div class="card-header bg-dark text-white py-3 rounded-top-4">
+            <h4 class="mb-0">
+                {% if assessment %}Edit{% else %}Create{% endif %} Final Assessment for: {{ course.title }}
+            </h4>
+        </div>
+        <div class="card-body p-4">
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Project Title</label>
+                    <input type="text" name="title" class="form-control" 
+                           value="{{ assessment.title|default:'' }}" 
+                           placeholder="e.g., Final Portfolio Project" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Instructions for Students</label>
+                    <textarea name="description" class="form-control" rows="5" 
+                              placeholder="Explain what the student needs to build/write to pass..." required>{{ assessment.description|default:'' }}</textarea>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Submission Deadline</label>
+                        <input type="datetime-local" name="deadline" class="form-control" 
+                               value="{{ assessment.deadline|date:'Y-m-d\TH:i' }}" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Project Brief (Optional File)</label>
+                        <input type="file" name="resource_file" class="form-control">
+                        {% if assessment.resource_file %}
+                            <div class="mt-2">
+                                <small class="text-primary fw-bold">
+                                    <i class="bi bi-file-earmark-check"></i> Current file: 
+                                    <a href="{{ assessment.resource_file.url }}" target="_blank">View existing resource</a>
+                                </small>
+                            </div>
+                        {% endif %}
+                        <small class="text-muted d-block mt-1">Upload a PDF or ZIP with templates for the students.</small>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-success px-5 rounded-pill fw-bold">
+                        {% if assessment %}Update{% else %}Publish{% endif %} Assessment
+                    </button>
+                    <a href="{% url 'course_detail' course.id %}" class="btn btn-outline-secondary px-4 rounded-pill">Back</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
